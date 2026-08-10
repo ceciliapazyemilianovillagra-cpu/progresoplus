@@ -16,13 +16,13 @@ const sections: { id: Section; label: string; icon: string; table?: string }[] =
 ];
 
 const details: Record<Section, { title: string; description: string; empty: string }> = {
-  inicio: { title: 'Tu espacio familiar', description: 'Un lugar tranquilo para organizar lo importante.', empty: '' },
-  tareas: { title: 'Tareas familiares', description: 'Lo que hay que hacer, en un solo lugar.', empty: 'TodavÃ­a no hay tareas.' },
-  tablero: { title: 'Tablero familiar', description: 'Una mirada rÃ¡pida a la semana.', empty: '' },
+  inicio: { title: 'Tu espacio', description: 'Un lugar tranquilo para organizar lo importante.', empty: '' },
+  tareas: { title: 'Tareas', description: 'Lo que hay que hacer, en un solo lugar.', empty: 'TodavÃ­a no hay tareas.' },
+  tablero: { title: 'Tablero', description: 'Una mirada rÃ¡pida a la semana.', empty: '' },
   salud: { title: 'Salud', description: 'Consultas, controles y recordatorios de bienestar.', empty: 'No hay registros de salud todavÃ­a.' },
   fe: { title: 'Fe', description: 'Intenciones, reflexiones y momentos para agradecer.', empty: 'TodavÃ­a no hay registros.' },
   notas: { title: 'Notas', description: 'Ideas y recordatorios para la familia.', empty: 'No hay notas todavÃ­a.' },
-  perfil: { title: 'Perfil familiar', description: 'PersonalizÃ¡ tu espacio familiar.', empty: '' }
+  perfil: { title: 'Perfil', description: 'PersonalizÃ¡ tu espacio.', empty: '' }
 };
 
 async function api(payload: object) {
@@ -67,10 +67,10 @@ export default function Home() {
 
   return <main className="shell">
     <aside className="sidebar">
-      <div className="brand"><span>âœ¦</span> FamiliHub</div>
-      <p className="tagline">Tu espacio familiar</p>
+      <div className="brand"><span>âœ¦</span> PROGRESO+</div>
+      <p className="tagline">Tu espacio personal</p>
       <nav>{sections.map(item => <button key={item.id} className={section === item.id ? 'nav active' : 'nav'} onClick={() => { setSection(item.id); setShowForm(false); }}><span>{item.icon}</span>{item.label}</button>)}</nav>
-      <div className="family-card"><span className="avatar">E</span><div><strong>Emiliano</strong><small>Familia</small></div></div>
+      <div className="family-card"><span className="avatar">E</span><div><strong>Emiliano</strong><small>Mi espacio</small></div></div>
     </aside>
     <section className="content">
       <header><div><p className="date">{today}</p><h1>{section === 'inicio' ? 'Hola, Emiliano ðŸ‘‹' : details[section].title}</h1><p>{details[section].description}</p></div>{active.table && <button className="primary" onClick={() => setShowForm(true)}>+ Agregar</button>}</header>
@@ -87,8 +87,8 @@ export default function Home() {
 }
 
 function HomeOverview({ setSection }: { setSection: (section: Section) => void }) {
-  return <div className="home-grid"><div className="welcome"><span>âœ¦</span><h2>Todo lo importante, mÃ¡s cerca</h2><p>OrganizÃ¡ tareas, notas y recordatorios sin perder de vista lo que une a tu familia.</p></div><div className="quick"><h2>Accesos rÃ¡pidos</h2>{sections.filter(item => ['tareas','salud','fe','notas'].includes(item.id)).map(item => <button key={item.id} onClick={() => setSection(item.id)}><span>{item.icon}</span>{item.label}<b>â€º</b></button>)}</div></div>;
+  return <div className="home-grid"><div className="welcome"><span>âœ¦</span><h2>Todo lo importante, mÃ¡s cerca</h2><p>OrganizÃ¡ tareas, notas y recordatorios para avanzar cada dÃ­a.</p></div><div className="quick"><h2>Accesos rÃ¡pidos</h2>{sections.filter(item => ['tareas','salud','fe','notas'].includes(item.id)).map(item => <button key={item.id} onClick={() => setSection(item.id)}><span>{item.icon}</span>{item.label}<b>â€º</b></button>)}</div></div>;
 }
 function Board() { return <div className="board"><article><span>âœ“</span><h2>Tareas</h2><p>OrganizÃ¡ las pendientes de la familia.</p></article><article><span>â™¥</span><h2>Bienestar</h2><p>TenÃ© a mano las fechas importantes.</p></article><article><span>âœ¦</span><h2>Momentos</h2><p>GuardÃ¡ aquello que quieren recordar.</p></article></div>; }
-function Profile() { return <div className="profile"><span className="big-avatar">E</span><h2>Emiliano</h2><p>Tu perfil familiar estÃ¡ listo. PrÃ³ximamente podrÃ¡s invitar a mÃ¡s integrantes.</p></div>; }
+function Profile() { return <div className="profile"><span className="big-avatar">E</span><h2>Emiliano</h2><p>Tu perfil estÃ¡ listo. PrÃ³ximamente podrÃ¡s personalizar mÃ¡s detalles.</p></div>; }
 
