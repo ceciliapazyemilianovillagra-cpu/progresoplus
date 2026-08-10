@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const requestBody = {
       ...body,
+      ownerId: userId,
       data: { ...(body.data || {}), ownerId: userId }
     };
     const response = await fetch(scriptUrl, {
