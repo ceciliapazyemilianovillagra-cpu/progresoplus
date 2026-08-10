@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'FamiliHub',
-  description: 'Tu espacio familiar para organizar lo importante.'
+  title: 'PROGRESO+',
+  description: 'Tu espacio para organizar lo importante.'
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
