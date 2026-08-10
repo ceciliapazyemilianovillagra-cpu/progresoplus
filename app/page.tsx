@@ -91,7 +91,7 @@ function HomeOverview({ setSection }: { setSection: (section: Section) => void }
     <div className="search"><span>Buscar en PROGRESO+</span><b>CTRL</b></div>
     <section className="spotlight"><small>ACTUALIZACION</small><p>Tu progreso crecio un <strong>40%</strong> esta semana.</p><button onClick={() => setSection('tablero')}>Ver tablero</button></section>
     <div className="stats"><article><small>Metas activas</small><strong>12</strong><em>+ 25% esta semana</em></article><article><small>Tareas listas</small><strong>82%</strong><em>+ 7% esta semana</em></article></div>
-    <section className="progress-card"><div><h2>Progreso semanal</h2><p>Tu avance por Ã¡rea</p></div><div className="ring"><span>68<small>%</small></span></div></section>
+    <section className="progress-card"><div><h2>Progreso semanal</h2><p>Tu avance por area</p></div><div className="ring"><span>68<small>%</small></span></div></section>
     <section className="activity"><div className="section-title"><h2>Actividad reciente</h2><button onClick={() => setSection('notas')}>Ver todo</button></div><div className="activity-row"><span className="activity-icon">OK</span><div><strong>Revision de objetivos</strong><small>Hoy, 10:30</small></div><b>Completado</b></div><div className="activity-row"><span className="activity-icon orange">NT</span><div><strong>Nota personal</strong><small>Ayer, 18:40</small></div><b className="pending">Pendiente</b></div></section>
   </div>;
 }
