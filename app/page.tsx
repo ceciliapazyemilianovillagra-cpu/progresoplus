@@ -1,28 +1,25 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 type RecordItem = { id: string; title?: string; content?: string; details?: string; status?: string; date?: string; dueDate?: string; category?: string };
-type Section = 'inicio' | 'tareas' | 'tablero' | 'salud' | 'fe' | 'notas' | 'perfil';
+type Section = 'inicio' | 'tareas' | 'salud' | 'notas' | 'configuracion';
 
 const sections: { id: Section; label: string; icon: string; table?: string }[] = [
   { id: 'inicio', label: 'Inicio', icon: 'IN' },
   { id: 'tareas', label: 'Tareas', icon: 'TA', table: 'tasks' },
-  { id: 'tablero', label: 'Tablero', icon: 'TB' },
   { id: 'salud', label: 'Salud', icon: 'SA', table: 'health' },
-  { id: 'fe', label: 'Fe', icon: 'FE', table: 'faith' },
   { id: 'notas', label: 'Notas', icon: 'NO', table: 'notes' },
-  { id: 'perfil', label: 'Perfil', icon: 'PE' }
+  { id: 'configuracion', label: 'Config.', icon: 'CF' }
 ];
 
 const details: Record<Section, { title: string; description: string; empty: string }> = {
   inicio: { title: 'Tu espacio', description: 'Un lugar claro para organizar lo importante.', empty: '' },
   tareas: { title: 'Tareas', description: 'Todo lo que hay que hacer, en un solo lugar.', empty: 'Todavia no hay tareas.' },
-  tablero: { title: 'Tablero', description: 'Una mirada rapida a la semana.', empty: '' },
   salud: { title: 'Salud', description: 'Consultas, controles y recordatorios de bienestar.', empty: 'No hay registros de salud todavia.' },
-  fe: { title: 'Fe', description: 'Intenciones, reflexiones y momentos para agradecer.', empty: 'Todavia no hay registros.' },
   notas: { title: 'Notas', description: 'Ideas y recordatorios importantes.', empty: 'No hay notas todavia.' },
-  perfil: { title: 'Perfil', description: 'Personaliza tu espacio.', empty: '' }
+  configuracion: { title: 'Configuracion', description: 'Administra tu perfil y preferencias.', empty: '' }
 };
 
 async function api(payload: object) {
@@ -31,6 +28,7 @@ async function api(payload: object) {
 }
 
 export default function Home() {
+  const { user } = useUser();
   const [section, setSection] = useState<Section>('inicio');
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,10 +71,9 @@ export default function Home() {
       <div className="family-card"><span className="avatar">E</span><div><strong>Emiliano</strong><small>Mi espacio</small></div></div>
     </aside>
     <section className="content">
-      <header><div><p className="date">{today}</p><h1>{section === 'inicio' ? 'Hola, Emiliano' : details[section].title}</h1><p>{details[section].description}</p></div>{active.table && <button className="primary" onClick={() => setShowForm(true)}>Agregar</button>}</header>
+      <header><div><p className="date">{today}</p><h1>{section === 'inicio' ? `Hola, ${user?.firstName || 'bienvenido'}` : details[section].title}</h1><p>{details[section].description}</p></div>{active.table && <button className="primary" onClick={() => setShowForm(true)}>Agregar</button>}</header>
       {section === 'inicio' && <HomeOverview setSection={setSection} />}
-      {section === 'tablero' && <Board />}
-      {section === 'perfil' && <Profile />}
+      {section === 'configuracion' && <Profile />}
       {active.table && <>
         {showForm && <form className="entry-form" onSubmit={addRecord}><input name="title" required placeholder="TÃ­tulo" autoFocus /><input name="date" type="date" /><textarea name="details" placeholder="Detalle opcional" /><div><button type="button" className="secondary" onClick={() => setShowForm(false)}>Cancelar</button><button className="primary">Guardar</button></div></form>}
         {message && <p className="notice">{message}</p>}
@@ -89,12 +86,11 @@ export default function Home() {
 function HomeOverview({ setSection }: { setSection: (section: Section) => void }) {
   return <div className="dashboard">
     <div className="search"><span>Buscar en PROGRESO+</span><b>CTRL</b></div>
-    <section className="spotlight"><small>ACTUALIZACION</small><p>Tu progreso crecio un <strong>40%</strong> esta semana.</p><button onClick={() => setSection('tablero')}>Ver tablero</button></section>
+    <section className="spotlight"><small>ACTUALIZACION</small><p>Tu progreso crecio un <strong>40%</strong> esta semana.</p><button onClick={() => setSection('tareas')}>Ver tareas</button></section>
     <div className="stats"><article><small>Metas activas</small><strong>12</strong><em>+ 25% esta semana</em></article><article><small>Tareas listas</small><strong>82%</strong><em>+ 7% esta semana</em></article></div>
     <section className="progress-card"><div><h2>Progreso semanal</h2><p>Tu avance por area</p></div><div className="ring"><span>68<small>%</small></span></div></section>
     <section className="activity"><div className="section-title"><h2>Actividad reciente</h2><button onClick={() => setSection('notas')}>Ver todo</button></div><div className="activity-row"><span className="activity-icon">OK</span><div><strong>Revision de objetivos</strong><small>Hoy, 10:30</small></div><b>Completado</b></div><div className="activity-row"><span className="activity-icon orange">NT</span><div><strong>Nota personal</strong><small>Ayer, 18:40</small></div><b className="pending">Pendiente</b></div></section>
   </div>;
 }
-function Board() { return <div className="board"><article><span>TA</span><h2>Tareas</h2><p>Organiza tus pendientes.</p></article><article><span>SA</span><h2>Bienestar</h2><p>Tene a mano fechas importantes.</p></article><article><span>ME</span><h2>Momentos</h2><p>Guarda lo que queres recordar.</p></article></div>; }
-function Profile() { return <div className="profile"><span className="big-avatar">E</span><h2>Emiliano</h2><p>Tu perfil esta listo. Proximamente podras personalizar mas detalles.</p></div>; }
+function Profile() { return <div className="profile"><span className="big-avatar">E</span><h2>Configuracion</h2><p>Desde aqui podras editar tu perfil, preferencias y sesion.</p><button className="primary">Editar perfil</button></div>; }
 
