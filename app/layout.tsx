@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
+import './theme.css';
 
 export const metadata: Metadata = {
   title: 'PROGRESO+',
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es"><body><ServiceWorker />{children}</body></html>;
+  return <ClerkProvider><html lang="es"><body><ServiceWorker />{children}</body></html></ClerkProvider>;
 }
 
 function ServiceWorker() {
