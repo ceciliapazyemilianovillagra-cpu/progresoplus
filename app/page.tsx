@@ -87,8 +87,14 @@ export default function Home() {
 }
 
 function HomeOverview({ setSection }: { setSection: (section: Section) => void }) {
-  return <div className="home-grid"><div className="welcome"><span>âœ¦</span><h2>Todo lo importante, mÃ¡s cerca</h2><p>OrganizÃ¡ tareas, notas y recordatorios para avanzar cada dÃ­a.</p></div><div className="quick"><h2>Accesos rÃ¡pidos</h2>{sections.filter(item => ['tareas','salud','fe','notas'].includes(item.id)).map(item => <button key={item.id} onClick={() => setSection(item.id)}><span>{item.icon}</span>{item.label}<b>â€º</b></button>)}</div></div>;
+  return <div className="dashboard">
+    <div className="search">âŒ• <span>Buscar en PROGRESO+</span><b>âŒ˜</b></div>
+    <section className="spotlight"><small>ACTUALIZACIÃ“N</small><p>Tu progreso creciÃ³ un <strong>40%</strong> esta semana.</p><button onClick={() => setSection('tablero')}>Ver tablero â€º</button></section>
+    <div className="stats"><article><small>Metas activas</small><strong>12</strong><em>â†— 25% esta semana</em></article><article><small>Tareas listas</small><strong>82%</strong><em>â†— 7% esta semana</em></article></div>
+    <section className="progress-card"><div><h2>Progreso semanal</h2><p>Tu avance por Ã¡rea</p></div><div className="ring"><span>68<small>%</small></span></div></section>
+    <section className="activity"><div className="section-title"><h2>Actividad reciente</h2><button onClick={() => setSection('notas')}>Ver todo</button></div><div className="activity-row"><span className="activity-icon">âœ“</span><div><strong>RevisiÃ³n de objetivos</strong><small>Hoy, 10:30</small></div><b>Completado</b></div><div className="activity-row"><span className="activity-icon orange">âœ¦</span><div><strong>Nota personal</strong><small>Ayer, 18:40</small></div><b className="pending">Pendiente</b></div></section>
+  </div>;
 }
-function Board() { return <div className="board"><article><span>âœ“</span><h2>Tareas</h2><p>OrganizÃ¡ las pendientes de la familia.</p></article><article><span>â™¥</span><h2>Bienestar</h2><p>TenÃ© a mano las fechas importantes.</p></article><article><span>âœ¦</span><h2>Momentos</h2><p>GuardÃ¡ aquello que quieren recordar.</p></article></div>; }
+function Board() { return <div className="board"><article><span>âœ“</span><h2>Tareas</h2><p>OrganizÃ¡ tus pendientes.</p></article><article><span>â™¥</span><h2>Bienestar</h2><p>TenÃ© a mano fechas importantes.</p></article><article><span>âœ¦</span><h2>Momentos</h2><p>GuardÃ¡ lo que querÃ©s recordar.</p></article></div>; }
 function Profile() { return <div className="profile"><span className="big-avatar">E</span><h2>Emiliano</h2><p>Tu perfil estÃ¡ listo. PrÃ³ximamente podrÃ¡s personalizar mÃ¡s detalles.</p></div>; }
 
