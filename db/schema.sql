@@ -1,0 +1,8 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE TABLE tareas (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), fecha date NOT NULL DEFAULT CURRENT_DATE, texto text NOT NULL CHECK(length(trim(texto))>0), hecha boolean NOT NULL DEFAULT false, creado timestamptz NOT NULL DEFAULT now());
+CREATE TABLE pesos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), fecha date NOT NULL DEFAULT CURRENT_DATE, kg numeric(5,2) NOT NULL CHECK(kg>0), nota text NOT NULL DEFAULT '');
+CREATE TABLE entrenamientos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), fecha date NOT NULL DEFAULT CURRENT_DATE, tipo text NOT NULL CHECK(length(trim(tipo))>0), duracion_min integer NOT NULL CHECK(duracion_min>0), nota text NOT NULL DEFAULT '');
+CREATE TABLE habitos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), nombre text NOT NULL CHECK(length(trim(nombre))>0), activo boolean NOT NULL DEFAULT true, creado timestamptz NOT NULL DEFAULT now());
+CREATE TABLE habito_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), habito_id uuid NOT NULL REFERENCES habitos(id) ON DELETE CASCADE, fecha date NOT NULL DEFAULT CURRENT_DATE, UNIQUE(habito_id,fecha));
+CREATE TABLE diario (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), fecha date NOT NULL DEFAULT CURRENT_DATE, texto text NOT NULL CHECK(length(trim(texto))>0), creado timestamptz NOT NULL DEFAULT now());
+CREATE INDEX tareas_fecha_idx ON tareas(fecha); CREATE INDEX pesos_fecha_idx ON pesos(fecha); CREATE INDEX entrenamientos_fecha_idx ON entrenamientos(fecha); CREATE INDEX habito_logs_habito_fecha_idx ON habito_logs(habito_id,fecha); CREATE INDEX diario_fecha_idx ON diario(fecha);
