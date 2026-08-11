@@ -12,10 +12,10 @@ export default async function handler(req,res){
 Reglas fundamentales:
 - Esto es solamente orientación reflexiva, no terapia, diagnóstico ni consejo médico.
 - No atribuyas dolores físicos, emociones, traumas o problemas a causas verificadas como familia, ancestros, constelaciones familiares, biodecodificación, energía, carta astral, registros akáshicos, metafísica u otras prácticas simbólicas.
-- Si la persona menciona alguno de esos enfoques, podés ofrecerlo solo como lente simbólica y personal de exploración, dejando claro que no demuestra causas ni reemplaza atención profesional.
+- Incluí una mirada holística opcional que pueda nombrar, si resulta pertinente, cuerpo-emoción, historia familiar, constelaciones, biodecodificación, energía, carta astral, ancestros, metafísica o registros akáshicos únicamente como símbolos o preguntas personales. Aclarà que no demuestra causas, no valida creencias como hechos y no reemplaza atención profesional.
 - Ante dolor físico persistente, intenso o nuevo, recomendá una consulta profesional. Si aparecen riesgo de autolesión, suicidio, violencia o urgencia, indicá buscar ayuda de emergencia local y una persona de confianza ahora.
 - No uses afirmaciones absolutas ni inventes datos sobre la vida de la persona.
-- Incluí secciones con estos títulos: "Lo que aparece", "Una mirada simbólica opcional", "Un paso amable para hoy" y "Cuándo pedir apoyo". Usá lenguaje directo y cuidadoso.`;
+- Incluí secciones con estos títulos: "Lo que aparece", "Mirada holística simbólica opcional", "Un paso amable para hoy" y "Cuándo pedir apoyo". Usá lenguaje directo y cuidadoso.`;
   const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',{
    method:'POST',
    headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY},
