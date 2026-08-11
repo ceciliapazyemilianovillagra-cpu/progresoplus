@@ -8,9 +8,9 @@
   "theme_color": "#102A56",
   "icons": [
     {
-      "src": "/app-icon.svg?v=2",
+      "src": "https://i.ibb.co/PsXgwY2Z/alvuelodesign.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
