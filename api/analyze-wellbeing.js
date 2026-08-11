@@ -1,3 +1,4 @@
+import { logAiEvent } from './ai-events.js';
 const json=(res,status,data)=>res.status(status).json(data);
 export default async function handler(req,res){
  try{
@@ -25,9 +26,11 @@ Reglas fundamentales:
   if(!response.ok)throw Error(payload?.error?.message||'Gemini no pudo generar la reflexión');
   const textoRespuesta=payload?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim();
   if(!textoRespuesta)throw Error('No se recibió una reflexión. Intentá nuevamente.');
+  await logAiEvent('bienestar','ok');
   return json(res,200,{ok:true,data:{texto:textoRespuesta}});
  }catch(error){
   console.error('[wellbeing-analysis]',error.message);
+  await logAiEvent('bienestar','error',error.message);
   return json(res,400,{ok:false,error:error.message||'No se pudo generar la reflexión'});
  }
 }
