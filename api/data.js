@@ -33,7 +33,8 @@ export default async function handler(req,res){
   }
   if(p.action==='logout'){res.setHeader('Set-Cookie',clear);return res.status(200).json({ok:true,data:{}})}
   const user=userFrom(req);if(!user)throw Error('Sesión requerida');
-  if(p.action==='session'){const settings=row(await sql`SELECT recordatorios_activos,canal_recordatorio,webhook_url,zona_horaria FROM configuracion_usuario WHERE usuario_id=${user.id}`);return res.status(200).json({ok:true,data:{user,settings}})}
+  const account=row(await sql`SELECT id::text,email,nombre FROM usuarios WHERE id=${user.id}`);if(!account){res.setHeader('Set-Cookie',clear);throw Error('Sesión requerida')}
+  if(p.action==='session'){const settings=row(await sql`SELECT recordatorios_activos,canal_recordatorio,webhook_url,zona_horaria FROM configuracion_usuario WHERE usuario_id=${user.id}`);return res.status(200).json({ok:true,data:{user:account,settings}})}
   let data;
   switch(p.action){
    case 'getAll':{const [tareas,pesos,entrenamientos,habitos,habitoLogs,diario]=await Promise.all([
