@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { getAiMonitoring } from './ai-events.js';
 
 const text=(v,n)=>{v=String(v??'').trim();if(!v)throw Error(n+' es obligatorio');return v};
 const day=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v??''))?String(v):new Date().toLocaleDateString('en-CA',{timeZone:'America/Argentina/Buenos_Aires'});
@@ -36,9 +37,10 @@ export default async function handler(req,res){
   const user=userFrom(req);if(!user)throw Error('Sesión requerida');
   const account=row(await sql`SELECT id::text,email,usuario,nombre,rol FROM usuarios WHERE id=${user.id}`);if(!account){res.setHeader('Set-Cookie',clear);throw Error('Sesión requerida')}
   if(p.action==='session'){const settings=row(await sql`SELECT recordatorios_activos,canal_recordatorio,webhook_url,zona_horaria FROM configuracion_usuario WHERE usuario_id=${user.id}`);return res.status(200).json({ok:true,data:{user:account,settings}})}
-  if(['listUsers','createUser','updateUser','resetPassword','deleteUser'].includes(p.action)&&account.rol!=='admin')throw Error('Solo el administrador puede gestionar usuarios');
+  if(['listUsers','createUser','updateUser','resetPassword','deleteUser','getAiMonitoring'].includes(p.action)&&account.rol!=='admin')throw Error('Solo el administrador puede gestionar usuarios');
   let data;
   switch(p.action){
+   case 'getAiMonitoring':data=await getAiMonitoring();break;
    case 'listUsers':data=await sql`SELECT id::text,email,usuario,nombre,rol,creado::text FROM usuarios ORDER BY creado`;break;
    case 'createUser':{const email=text(p.email,'Email').toLowerCase(),usuario=text(p.usuario,'Usuario').toLowerCase(),password=text(p.password,'Contraseña');if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');data=row(await sql`INSERT INTO usuarios(email,usuario,nombre,password_hash,rol) VALUES (${email},${usuario},${text(p.nombre,'Nombre')},${hash(password)},${p.rol==='admin'?'admin':'user'}) RETURNING id::text,email,usuario,nombre,rol,creado::text`);await sql`INSERT INTO configuracion_usuario(usuario_id) VALUES (${data.id})`;break;}
    case 'updateUser':data=row(await sql`UPDATE usuarios SET email=${text(p.email,'Email').toLowerCase()},usuario=${text(p.usuario,'Usuario').toLowerCase()},nombre=${text(p.nombre,'Nombre')},rol=${p.rol==='admin'?'admin':'user'} WHERE id=${p.id} RETURNING id::text,email,usuario,nombre,rol,creado::text`);break;
