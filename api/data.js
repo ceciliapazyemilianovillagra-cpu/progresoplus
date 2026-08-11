@@ -31,7 +31,7 @@ export default async function handler(req,res){
    case 'updateDiario':data=result(await sql`UPDATE diario SET texto=${text(p.texto,'Nota')},fecha=${day(p.fecha)} WHERE id=${p.id} RETURNING id::text,fecha::text,texto,creado::text`);break;
    case 'updateHabito':data=p.nombre!==undefined?result(await sql`UPDATE habitos SET nombre=${text(p.nombre,'Hábito')} WHERE id=${p.id} RETURNING id::text,nombre,activo,creado::text`):result(await sql`UPDATE habitos SET activo=${(p.activo===true||p.activo==='true')} WHERE id=${p.id} RETURNING id::text,nombre,activo,creado::text`);break;
    case 'toggleTarea':data=result(await sql`UPDATE tareas SET hecha=${(p.hecha===true||p.hecha==='true')} WHERE id=${p.id} RETURNING id::text,fecha::text,texto,hecha,creado::text`);break;
-   case 'toggleHabitoLog':{const d=day(p.fecha),deleted=await sql`DELETE FROM habito_logs WHERE habito_id=${p.habito_id} AND fecha=${d} RETURNING id`;if(deleted.length)data={marcado:false};else{await sql`INSERT INTO habito_logs(habito_id,fecha) VALUES (${p.habito_id},${d})`;data={marcado:true}}break;
+   case 'toggleHabitoLog':{const d=day(p.fecha),deleted=await sql`DELETE FROM habito_logs WHERE habito_id=${p.habito_id} AND fecha=${d} RETURNING id`;if(deleted.length)data={marcado:false};else{await sql`INSERT INTO habito_logs(habito_id,fecha) VALUES (${p.habito_id},${d})`;data={marcado:true}}}break;
    case 'deleteTarea':await sql`DELETE FROM tareas WHERE id=${p.id}`;data={id:p.id,deleted:true};break;
    case 'deletePeso':await sql`DELETE FROM pesos WHERE id=${p.id}`;data={id:p.id,deleted:true};break;
    case 'deleteEntrenamiento':await sql`DELETE FROM entrenamientos WHERE id=${p.id}`;data={id:p.id,deleted:true};break;
