@@ -17,5 +17,5 @@ export default async function handler(req,res){
   const result=JSON.parse(raw.replace(/^\s*```json?\s*/i,'').replace(/\s*```\s*$/,''));
   result.alimentos=Array.isArray(result.alimentos)?result.alimentos:[];
   return json(res,200,{ok:true,data:result});
- }catch(error){return json(res,400,{ok:false,error:error.message||'No se pudo analizar la foto'})}
+ }catch(error){console.error('[food-analysis]',error.message);return json(res,400,{ok:false,error:error.message||'No se pudo analizar la foto'})}
 }
