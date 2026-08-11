@@ -4,13 +4,13 @@
   "description": "Tu progreso, a tu ritmo.",
   "start_url": "/?source=homescreen",
   "display": "standalone",
-  "background_color": "#F8FBFC",
-  "theme_color": "#0A1F44",
+  "background_color": "#F4F5F7",
+  "theme_color": "#102A56",
   "icons": [
     {
-      "src": "https://i.ibb.co/0RSYScgq/Gemini-Generated-Image-wnb4snwnb4snwnb4-removebg-preview.png",
+      "src": "/app-icon.svg?v=2",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
