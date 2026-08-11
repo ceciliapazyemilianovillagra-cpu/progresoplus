@@ -22,8 +22,8 @@ export default async function handler(req,res){
    if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');
    const u=row(await sql\`INSERT INTO usuarios(email,nombre,password_hash) VALUES (\${email},\${text(p.nombre,'Nombre')},\${hash(password)}) RETURNING id::text,email,nombre\`);
    await sql\`INSERT INTO configuracion_usuario(usuario_id) VALUES (\${u.id})\`;
-   const prior=await sql\`SELECT count(*)::int AS total FROM usuarios\`;
-   if(prior[0].total===1){await Promise.all(['tareas','pesos','entrenamientos','habitos','diario'].map(t=>sql.query('UPDATE '+t+' SET usuario_id=$1 WHERE usuario_id IS NULL',[u.id])))}
+   const prior=await sql`SELECT count(*)::int AS total FROM usuarios`;
+   if(prior[0].total===1){await Promise.all([sql`UPDATE tareas SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE pesos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE entrenamientos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE habitos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE diario SET usuario_id=${u.id} WHERE usuario_id IS NULL`])}
    res.setHeader('Set-Cookie',cookie(token(u)));return res.status(201).json({ok:true,data:{user:u}});
   }
   if(p.action==='login'){
@@ -50,8 +50,18 @@ export default async function handler(req,res){
    case 'addEntrenamiento':data=row(await sql\`INSERT INTO entrenamientos(usuario_id,fecha,tipo,duracion_min,nota) VALUES (\${user.id},\${day(p.fecha)},\${text(p.tipo,'Tipo')},\${positive(p.duracion_min||1,'Duración')},\${String(p.nota||'')}) RETURNING id::text,fecha::text,tipo,duracion_min,nota\`);break;
    case 'addDiario':data=row(await sql\`INSERT INTO diario(usuario_id,fecha,texto) VALUES (\${user.id},\${day(p.fecha)},\${text(p.texto,'Nota')}) RETURNING id::text,fecha::text,texto,creado::text\`);break;
    case 'addHabito':data=row(await sql\`INSERT INTO habitos(usuario_id,nombre) VALUES (\${user.id},\${text(p.nombre,'Hábito')}) RETURNING id::text,nombre,activo,creado::text\`);break;
-   case 'toggleTarea':data=row(await sql\`UPDATE tareas SET hecha=\${p.hecha===true||p.hecha==='true'} WHERE id=\${p.id} AND usuario_id=\${user.id} RETURNING id::text,fecha::text,texto,hecha,creado::text,vencimiento::text\`);break;
-   case 'deleteTarea':await sql\`DELETE FROM tareas WHERE id=\${p.id} AND usuario_id=\${user.id}\`;data={id:p.id,deleted:true};break;
+   case 'updateTarea':data=row(await sql`UPDATE tareas SET texto=${text(p.texto,'Tarea')},fecha=${day(p.fecha)},vencimiento=${p.vencimiento||null} WHERE id=${p.id} AND usuario_id=${user.id} RETURNING id::text,fecha::text,texto,hecha,creado::text,vencimiento::text`);break;
+   case 'updatePeso':data=row(await sql`UPDATE pesos SET kg=${positive(p.kg,'Peso')},fecha=${day(p.fecha)},nota=${String(p.nota||'')} WHERE id=${p.id} AND usuario_id=${user.id} RETURNING id::text,fecha::text,kg::float8 AS kg,nota`);break;
+   case 'updateEntrenamiento':data=row(await sql`UPDATE entrenamientos SET tipo=${text(p.tipo,'Tipo')},duracion_min=${positive(p.duracion_min||1,'Duración')},fecha=${day(p.fecha)},nota=${String(p.nota||'')} WHERE id=${p.id} AND usuario_id=${user.id} RETURNING id::text,fecha::text,tipo,duracion_min,nota`);break;
+   case 'updateDiario':data=row(await sql`UPDATE diario SET texto=${text(p.texto,'Nota')},fecha=${day(p.fecha)} WHERE id=${p.id} AND usuario_id=${user.id} RETURNING id::text,fecha::text,texto,creado::text`);break;
+   case 'updateHabito':data=p.nombre!==undefined?row(await sql`UPDATE habitos SET nombre=${text(p.nombre,'Hábito')} WHERE id=${p.id} AND usuario_id=${user.id} RETURNING id::text,nombre,activo,creado::text`):row(await sql`UPDATE habitos SET activo=${(p.activo===true||p.activo==='true')} WHERE id=${p.id} AND usuario_id=${user.id} RETURNING id::text,nombre,activo,creado::text`);break;
+   case 'toggleTarea':data=row(await sql`UPDATE tareas SET hecha=${(p.hecha===true||p.hecha==='true')} WHERE id=${p.id} AND usuario_id=${user.id} RETURNING id::text,fecha::text,texto,hecha,creado::text,vencimiento::text`);break;
+   case 'toggleHabitoLog':{const d=day(p.fecha),deleted=await sql`DELETE FROM habito_logs l USING habitos h WHERE l.habito_id=h.id AND l.habito_id=${p.habito_id} AND l.fecha=${d} AND h.usuario_id=${user.id} RETURNING l.id`;if(deleted.length)data={marcado:false};else{const h=row(await sql`SELECT id FROM habitos WHERE id=${p.habito_id} AND usuario_id=${user.id}`);if(!h)throw Error('Registro no encontrado');await sql`INSERT INTO habito_logs(habito_id,fecha) VALUES (${p.habito_id},${d})`;data={marcado:true}}}break;
+   case 'deleteTarea':await sql`DELETE FROM tareas WHERE id=${p.id} AND usuario_id=${user.id}`;data={id:p.id,deleted:true};break;
+   case 'deletePeso':await sql`DELETE FROM pesos WHERE id=${p.id} AND usuario_id=${user.id}`;data={id:p.id,deleted:true};break;
+   case 'deleteEntrenamiento':await sql`DELETE FROM entrenamientos WHERE id=${p.id} AND usuario_id=${user.id}`;data={id:p.id,deleted:true};break;
+   case 'deleteDiario':await sql`DELETE FROM diario WHERE id=${p.id} AND usuario_id=${user.id}`;data={id:p.id,deleted:true};break;
+   case 'deleteHabito':await sql`DELETE FROM habitos WHERE id=${p.id} AND usuario_id=${user.id}`;data={id:p.id,deleted:true};break;
    default:throw Error('Acción no disponible todavía')
   }
   if(!data)throw Error('Registro no encontrado');res.status(200).json({ok:true,data});
