@@ -18,25 +18,33 @@ export default async function handler(req,res){
   if(!process.env.DATABASE_URL)throw Error('Falta configurar DATABASE_URL en Vercel');
   const p={...req.query,...(typeof req.body==='object'&&req.body?req.body:{})},sql=neon(process.env.DATABASE_URL);
   if(p.action==='register'){
-   const email=text(p.email,'Email').toLowerCase(),password=text(p.password,'Contraseña');
+   const email=text(p.email,'Email').toLowerCase(),password=text(p.password,'Contraseña'),usuario=text(p.usuario||email.split('@')[0],'Usuario').toLowerCase();
    if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');
-   const u=row(await sql`INSERT INTO usuarios(email,nombre,password_hash) VALUES (${email},${text(p.nombre,'Nombre')},${hash(password)}) RETURNING id::text,email,nombre`);
+   const prior=row(await sql`SELECT count(*)::int AS total FROM usuarios`),isBootstrap=prior.total===0&&email==='emilianovillagra@gmail.com';
+   if(!isBootstrap)throw Error('Las cuentas las crea el administrador');
+   const u=row(await sql`INSERT INTO usuarios(email,usuario,nombre,password_hash,rol) VALUES (${email},${usuario},${text(p.nombre||'Emiliano Villagra','Nombre')},${hash(password)},'admin') RETURNING id::text,email,usuario,nombre,rol`);
    await sql`INSERT INTO configuracion_usuario(usuario_id) VALUES (${u.id})`;
-   const prior=await sql`SELECT count(*)::int AS total FROM usuarios`;
-   if(prior[0].total===1){await Promise.all([sql`UPDATE tareas SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE pesos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE entrenamientos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE habitos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE diario SET usuario_id=${u.id} WHERE usuario_id IS NULL`])}
+   await Promise.all([sql`UPDATE tareas SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE pesos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE entrenamientos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE habitos SET usuario_id=${u.id} WHERE usuario_id IS NULL`,sql`UPDATE diario SET usuario_id=${u.id} WHERE usuario_id IS NULL`]);
    res.setHeader('Set-Cookie',cookie(token(u)));return res.status(201).json({ok:true,data:{user:u}});
   }
   if(p.action==='login'){
-   const u=row(await sql`SELECT id::text,email,nombre,password_hash FROM usuarios WHERE email=${text(p.email,'Email').toLowerCase()}`);
-   if(!u||!matches(text(p.password,'Contraseña'),u.password_hash))throw Error('Email o contraseña incorrectos');
-   const clean={id:u.id,email:u.email,nombre:u.nombre};res.setHeader('Set-Cookie',cookie(token(clean)));return res.status(200).json({ok:true,data:{user:clean}});
+   const login=text(p.usuario||p.email,'Usuario').toLowerCase(),u=row(await sql`SELECT id::text,email,usuario,nombre,rol,password_hash FROM usuarios WHERE lower(usuario)=${login} OR email=${login}`);
+   if(!u||!matches(text(p.password,'Contraseña'),u.password_hash))throw Error('Usuario o contraseña incorrectos');
+   const clean={id:u.id,email:u.email,usuario:u.usuario,nombre:u.nombre,rol:u.rol};res.setHeader('Set-Cookie',cookie(token(clean)));return res.status(200).json({ok:true,data:{user:clean}});
   }
   if(p.action==='logout'){res.setHeader('Set-Cookie',clear);return res.status(200).json({ok:true,data:{}})}
   const user=userFrom(req);if(!user)throw Error('Sesión requerida');
-  const account=row(await sql`SELECT id::text,email,nombre FROM usuarios WHERE id=${user.id}`);if(!account){res.setHeader('Set-Cookie',clear);throw Error('Sesión requerida')}
+  const account=row(await sql`SELECT id::text,email,usuario,nombre,rol FROM usuarios WHERE id=${user.id}`);if(!account){res.setHeader('Set-Cookie',clear);throw Error('Sesión requerida')}
   if(p.action==='session'){const settings=row(await sql`SELECT recordatorios_activos,canal_recordatorio,webhook_url,zona_horaria FROM configuracion_usuario WHERE usuario_id=${user.id}`);return res.status(200).json({ok:true,data:{user:account,settings}})}
+  if(['listUsers','createUser','updateUser','resetPassword','deleteUser'].includes(p.action)&&account.rol!=='admin')throw Error('Solo el administrador puede gestionar usuarios');
   let data;
   switch(p.action){
+   case 'listUsers':data=await sql`SELECT id::text,email,usuario,nombre,rol,creado::text FROM usuarios ORDER BY creado`;break;
+   case 'createUser':{const email=text(p.email,'Email').toLowerCase(),usuario=text(p.usuario,'Usuario').toLowerCase(),password=text(p.password,'Contraseña');if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');data=row(await sql`INSERT INTO usuarios(email,usuario,nombre,password_hash,rol) VALUES (${email},${usuario},${text(p.nombre,'Nombre')},${hash(password)},${p.rol==='admin'?'admin':'user'}) RETURNING id::text,email,usuario,nombre,rol,creado::text`);await sql`INSERT INTO configuracion_usuario(usuario_id) VALUES (${data.id})`;break;}
+   case 'updateUser':data=row(await sql`UPDATE usuarios SET email=${text(p.email,'Email').toLowerCase()},usuario=${text(p.usuario,'Usuario').toLowerCase()},nombre=${text(p.nombre,'Nombre')},rol=${p.rol==='admin'?'admin':'user'} WHERE id=${p.id} RETURNING id::text,email,usuario,nombre,rol,creado::text`);break;
+   case 'resetPassword':{const password=text(p.password,'Contraseña');if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');await sql`UPDATE usuarios SET password_hash=${hash(password)} WHERE id=${p.id}`;data={id:p.id,reset:true};break;}
+   case 'deleteUser':if(p.id===account.id)throw Error('No podés eliminar tu propia cuenta');await sql`DELETE FROM usuarios WHERE id=${p.id}`;data={id:p.id,deleted:true};break;
+   
    case 'getAll':{const [tareas,pesos,entrenamientos,habitos,habitoLogs,diario]=await Promise.all([
     sql`SELECT id::text,fecha::text,texto,hecha,creado::text,vencimiento::text FROM tareas WHERE usuario_id=${user.id} ORDER BY fecha,creado`,
     sql`SELECT id::text,fecha::text,kg::float8 AS kg,nota FROM pesos WHERE usuario_id=${user.id} ORDER BY fecha`,
