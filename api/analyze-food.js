@@ -1,3 +1,4 @@
+import { logAiEvent } from './ai-events.js';
 const json=(res,status,data)=>res.status(status).json(data);
 export default async function handler(req,res){
  try{
@@ -16,6 +17,7 @@ export default async function handler(req,res){
   const raw=payload?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
   const result=JSON.parse(raw.replace(/^\s*\`\`\`json?\s*/i,'').replace(/\s*\`\`\`\s*$/,''));
   result.alimentos=Array.isArray(result.alimentos)?result.alimentos:[];
+  await logAiEvent('comida','ok');
   return json(res,200,{ok:true,data:result});
- }catch(error){console.error('[food-analysis]',error.message);return json(res,400,{ok:false,error:error.message||'No se pudo analizar la foto'})}
+ }catch(error){console.error('[food-analysis]',error.message);await logAiEvent('comida','error',error.message);return json(res,400,{ok:false,error:error.message||'No se pudo analizar la foto'})}
 }
