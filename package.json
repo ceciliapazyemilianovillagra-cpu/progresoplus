@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.1"
+    "postgres": "^3.4.5"
   },
   "type": "module"
 }

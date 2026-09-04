@@ -1,8 +1,8 @@
-import { neon } from '@neondatabase/serverless';
+import postgres from 'postgres';
 
 async function sqlClient(){
  if(!process.env.DATABASE_URL)return null;
- const sql=neon(process.env.DATABASE_URL);
+ const sql=postgres(process.env.DATABASE_URL,{ssl:'require',prepare:false,max:1,idle_timeout:5});
  await sql`CREATE TABLE IF NOT EXISTS ai_eventos (id BIGSERIAL PRIMARY KEY, tipo TEXT NOT NULL, estado TEXT NOT NULL, detalle TEXT, creado TIMESTAMPTZ NOT NULL DEFAULT now())`;
  return sql;
 }
