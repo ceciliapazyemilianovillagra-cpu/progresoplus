@@ -1,6 +1,11 @@
 import postgres from 'postgres';
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { getAiMonitoring } from './ai-events.js';
+
+const BOOKS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'books');
 
 const text=(v,n)=>{v=String(v??'').trim();if(!v)throw Error(n+' es obligatorio');return v};
 const day=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v??''))?String(v):new Date().toLocaleDateString('en-CA',{timeZone:'America/Argentina/Buenos_Aires'});
@@ -41,6 +46,7 @@ export default async function handler(req,res){
   let data;
   switch(p.action){
    case 'getAiMonitoring':data=await getAiMonitoring();break;
+   case 'getMotivacion':{let files=[];try{files=readdirSync(BOOKS_DIR).filter(f=>f.endsWith('.json'))}catch{throw Error('No hay libros cargados todavía')}if(!files.length)throw Error('No hay libros cargados todavía');const candidatos=[];for(const f of files){try{const libro=JSON.parse(readFileSync(join(BOOKS_DIR,f),'utf8'));for(const c of(Array.isArray(libro.capitulos)?libro.capitulos:[]))candidatos.push({libro:libro.titulo||f,autor:libro.autor||'',capitulo:c})}catch{}}if(!candidatos.length)throw Error('No hay capítulos cargados todavía');const excluir=Array.isArray(p.excluir)?p.excluir:[];let disponibles=candidatos.filter(c=>!excluir.includes(c.capitulo.titulo));if(!disponibles.length)disponibles=candidatos;data=disponibles[Math.floor(Math.random()*disponibles.length)];break}
    case 'listUsers':data=await sql`SELECT id::text,email,usuario,nombre,rol,creado::text FROM usuarios ORDER BY creado`;break;
    case 'createUser':{const email=text(p.email,'Email').toLowerCase(),usuario=text(p.usuario,'Usuario').toLowerCase(),password=text(p.password,'Contraseña');if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');data=row(await sql`INSERT INTO usuarios(email,usuario,nombre,password_hash,rol) VALUES (${email},${usuario},${text(p.nombre,'Nombre')},${hash(password)},${p.rol==='admin'?'admin':'user'}) RETURNING id::text,email,usuario,nombre,rol,creado::text`);await sql`INSERT INTO configuracion_usuario(usuario_id) VALUES (${data.id})`;break;}
    case 'updateUser':data=row(await sql`UPDATE usuarios SET email=${text(p.email,'Email').toLowerCase()},usuario=${text(p.usuario,'Usuario').toLowerCase()},nombre=${text(p.nombre,'Nombre')},rol=${p.rol==='admin'?'admin':'user'} WHERE id=${p.id} RETURNING id::text,email,usuario,nombre,rol,creado::text`);break;
