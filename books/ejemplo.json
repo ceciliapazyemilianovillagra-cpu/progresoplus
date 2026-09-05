@@ -1,0 +1,14 @@
+{
+  "titulo": "Libro de ejemplo",
+  "autor": "Autor de ejemplo",
+  "capitulos": [
+    {
+      "titulo": "Capítulo 1: El comienzo",
+      "texto": "Este es un fragmento de ejemplo. Reemplazá este archivo por tus propios libros en formato JSON, siguiendo el README de esta carpeta."
+    },
+    {
+      "titulo": "Capítulo 2: La continuación",
+      "texto": "Cada objeto dentro de \"capitulos\" es una lectura independiente que la app puede elegir al azar."
+    }
+  ]
+}
