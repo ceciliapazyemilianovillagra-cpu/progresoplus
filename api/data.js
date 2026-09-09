@@ -46,6 +46,7 @@ export default async function handler(req,res){
  try{
   if(!process.env.DATABASE_URL)throw Error('Falta configurar DATABASE_URL en Vercel');
   const p={...req.query,...(typeof req.body==='object'&&req.body?req.body:{})},sql=postgres(process.env.DATABASE_URL,{ssl:'require',prepare:false,max:1,idle_timeout:5});
+  await sql`SET timezone='America/Argentina/Buenos_Aires'`;
   if(p.action==='register'){
    const email=text(p.email,'Email').toLowerCase(),password=text(p.password,'Contraseña'),usuario=text(p.usuario||email.split('@')[0],'Usuario').toLowerCase();
    if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');
