@@ -1,6 +1,6 @@
 {
-  "name": "Progreso+",
-  "short_name": "Progreso+",
+  "name": "VidaPlus",
+  "short_name": "VidaPlus",
   "description": "Tu progreso, a tu ritmo.",
   "start_url": "/?source=homescreen",
   "display": "standalone",
