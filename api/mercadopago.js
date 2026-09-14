@@ -92,14 +92,22 @@ export default async function handler(req, res) {
       const precio = Number(process.env.MP_PRECIO_ACCESO || 0);
       if (!precio) throw Error('Falta configurar MP_PRECIO_ACCESO en Vercel (precio en ARS)');
       const base = siteUrl(req);
-      const sinVuelta = req.query.sinvuelta === '1';
+      const modo = req.query.modo || 'completo'; // completo | sinvuelta | solonotif | soloback | backauto
       const prefBody = {
         items: [{ title: 'Acceso a VidaPlus', quantity: 1, unit_price: precio, currency_id: 'ARS' }],
       };
-      if (!sinVuelta) {
+      if (modo === 'completo') {
         prefBody.back_urls = { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` };
         prefBody.notification_url = `${base}/api/mercadopago`;
+      } else if (modo === 'solonotif') {
+        prefBody.notification_url = `${base}/api/mercadopago`;
+      } else if (modo === 'soloback') {
+        prefBody.back_urls = { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` };
+      } else if (modo === 'backauto') {
+        prefBody.back_urls = { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` };
+        prefBody.auto_return = 'approved';
       }
+      // modo === 'sinvuelta' no agrega nada extra
       const r = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
