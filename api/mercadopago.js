@@ -97,12 +97,11 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           items: [{ title: 'Acceso a VidaPlus', quantity: 1, unit_price: precio, currency_id: 'ARS' }],
           back_urls: { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` },
-          auto_return: 'approved',
           notification_url: `${base}/api/mercadopago`,
         }),
       });
       const j = await r.json();
-      if (!r.ok) throw Error(j.message || 'No se pudo crear el link de pago');
+      if (!r.ok) throw Error((j.message || 'No se pudo crear el link de pago') + (j.cause ? ' — ' + JSON.stringify(j.cause) : ''));
       return res.status(200).json({ ok: true, init_point: j.init_point });
     }
 
