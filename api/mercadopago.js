@@ -84,14 +84,6 @@ export default async function handler(req, res) {
     if (!process.env.DATABASE_URL) throw Error('Falta configurar DATABASE_URL en Vercel');
     const sql = postgres(process.env.DATABASE_URL, { ssl: 'require', prepare: false, max: 1, idle_timeout: 5 });
 
-    // 0) Diagnóstico temporal: valida el MP_ACCESS_TOKEN contra la cuenta de MercadoPago
-    if (req.method === 'GET' && req.query.debug === '1') {
-      const token = process.env.MP_ACCESS_TOKEN;
-      if (!token) return res.status(200).json({ ok: true, tieneToken: false });
-      const r = await fetch('https://api.mercadopago.com/users/me', { headers: { Authorization: `Bearer ${token}` } });
-      const j = await r.json();
-      return res.status(200).json({ ok: true, tieneToken: true, tokenLen: token.length, tokenPrefix: token.slice(0, 8), status: r.status, cuenta: r.ok ? { id: j.id, email: j.email, site_id: j.site_id } : j });
-    }
 
     // 1) Crear el link de pago (lo llama el botón "Comprar" de comprar.html)
     if (req.method === 'GET' && req.query.crear === '1') {
