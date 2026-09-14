@@ -1,0 +1,36 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Comprar acceso — VidaPlus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--violet:#2F6B4F;--accent:#C1653B;--cream:#F6F2E7;--ink:#25332B;--muted:#6E7D72;--line:#E4E4D6}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Montserrat',sans-serif;background:var(--cream);color:var(--ink);min-height:100dvh;display:grid;place-items:center;padding:20px}
+.card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:24px;padding:32px 28px;box-shadow:0 18px 45px #0002;text-align:center}
+h1{font-size:22px;margin:0 0 6px}
+p{color:var(--muted);margin:0 0 24px;font-size:14px;line-height:1.5}
+.precio{font-size:34px;font-weight:800;margin:10px 0 22px}
+button{width:100%;border:0;border-radius:14px;padding:15px;background:var(--violet);color:#fff;font-weight:800;font-size:15px;cursor:pointer}
+button:disabled{opacity:.6;cursor:default}
+.err{color:#a52c28;font-size:13px;margin-top:14px;display:none}
+</style></head><body>
+<div class="card">
+<h1>Acceso a VidaPlus</h1>
+<p>Comida saludable, cuerpo saludable y recordatorios, todo en un solo lugar. El precio final se muestra en el siguiente paso, en MercadoPago.</p>
+<button id="btn" onclick="comprar()">Comprar ahora</button>
+<p class="err" id="err"></p>
+</div>
+<script>
+async function comprar(){
+  const btn=document.getElementById('btn'),err=document.getElementById('err');
+  btn.disabled=true;btn.textContent='Generando el link de pago…';err.style.display='none';
+  try{
+    const r=await fetch('/api/mercadopago?crear=1');
+    const j=await r.json();
+    if(!j.ok)throw Error(j.error||'No se pudo iniciar el pago');
+    location.href=j.init_point;
+  }catch(e){
+    err.textContent=e.message;err.style.display='block';
+    btn.disabled=false;btn.textContent='Comprar ahora';
+  }
+}
+</script>
+</body></html>

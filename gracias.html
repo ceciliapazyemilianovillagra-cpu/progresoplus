@@ -1,0 +1,55 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>¡Listo! — VidaPlus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--violet:#2F6B4F;--accent:#C1653B;--cream:#F6F2E7;--ink:#25332B;--muted:#6E7D72;--line:#E4E4D6}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Montserrat',sans-serif;background:var(--cream);color:var(--ink);min-height:100dvh;display:grid;place-items:center;padding:20px}
+.card{width:min(440px,100%);background:#fff;border:1px solid var(--line);border-radius:24px;padding:32px 28px;box-shadow:0 18px 45px #0002;text-align:center}
+h1{font-size:22px;margin:0 0 6px}
+p{color:var(--muted);margin:0 0 18px;font-size:14px;line-height:1.5}
+.datos{background:var(--cream);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:left;margin-bottom:18px}
+.fila{margin-bottom:10px}
+.fila:last-child{margin-bottom:0}
+.fila small{display:block;color:var(--muted);font-weight:700;letter-spacing:.04em;font-size:10.5px;text-transform:uppercase;margin-bottom:2px}
+.fila b{font-size:16px;word-break:break-all}
+.aviso{background:#FFF6E8;border:1px solid #F0DDB0;color:#7a5b12;font-size:12.5px;border-radius:12px;padding:10px 12px;margin-bottom:18px;text-align:left}
+a.btn{display:block;width:100%;border:0;border-radius:14px;padding:15px;background:var(--violet);color:#fff;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}
+.spin{color:var(--muted);font-size:14px}
+.err{color:#a52c28;font-size:13.5px}
+</style></head><body>
+<div class="card" id="card"><p class="spin">Confirmando tu pago…</p></div>
+<script>
+const params=new URLSearchParams(location.search);
+const paymentId=params.get('payment_id');
+const card=document.getElementById('card');
+function render(html){card.innerHTML=html}
+function esc(s){return String(s??'').replace(/[&<>'"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[x]))}
+async function ir(){
+  if(!paymentId){render('<h1>Falta información</h1><p>No encontramos el pago. Si ya pagaste, escribinos y lo resolvemos a mano.</p>');return}
+  try{
+    const r=await fetch('/api/mercadopago?payment_id='+encodeURIComponent(paymentId));
+    const j=await r.json();
+    if(!j.ok)throw Error(j.error||'No se pudo confirmar el pago');
+    if(j.estado!=='approved'){
+      render('<h1>Tu pago está en proceso</h1><p>Todavía no se acreditó. En unos minutos actualizá esta página o escribinos si no cambia.</p>');
+      return;
+    }
+    if(j.created){
+      render(`<h1>¡Listo, ya sos parte de VidaPlus!</h1><p>Guardá estos datos, son para entrar a tu cuenta:</p>
+      <div class="datos">
+        <div class="fila"><small>Usuario</small><b>${esc(j.email)}</b></div>
+        <div class="fila"><small>Contraseña</small><b>${esc(j.password)}</b></div>
+      </div>
+      <div class="aviso">Guardala en un lugar seguro. Una vez que entres, te recomendamos cambiarla por una que elijas vos.</div>
+      <a class="btn" href="/">Entrar a VidaPlus</a>`);
+    }else{
+      render(`<h1>¡Ya sos parte de VidaPlus!</h1><p>Detectamos que <b>${esc(j.email)}</b> ya tenía una cuenta creada. Iniciá sesión con tu usuario y clave de siempre.</p>
+      <a class="btn" href="/">Ir a iniciar sesión</a>`);
+    }
+  }catch(e){
+    render('<h1 class="err">Ups</h1><p>'+e.message+'. Si ya pagaste, escribinos y lo resolvemos a mano.</p>');
+  }
+}
+ir();
+</script>
+</body></html>
