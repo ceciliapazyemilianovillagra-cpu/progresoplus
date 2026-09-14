@@ -92,14 +92,18 @@ export default async function handler(req, res) {
       const precio = Number(process.env.MP_PRECIO_ACCESO || 0);
       if (!precio) throw Error('Falta configurar MP_PRECIO_ACCESO en Vercel (precio en ARS)');
       const base = siteUrl(req);
+      const sinVuelta = req.query.sinvuelta === '1';
+      const prefBody = {
+        items: [{ title: 'Acceso a VidaPlus', quantity: 1, unit_price: precio, currency_id: 'ARS' }],
+      };
+      if (!sinVuelta) {
+        prefBody.back_urls = { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` };
+        prefBody.notification_url = `${base}/api/mercadopago`;
+      }
       const r = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: [{ title: 'Acceso a VidaPlus', quantity: 1, unit_price: precio, currency_id: 'ARS' }],
-          back_urls: { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` },
-          notification_url: `${base}/api/mercadopago`,
-        }),
+        body: JSON.stringify(prefBody),
       });
       const j = await r.json();
       if (!r.ok) throw Error((j.message || 'No se pudo crear el link de pago') + (j.cause ? ' — ' + JSON.stringify(j.cause) : ''));
