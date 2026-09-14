@@ -92,22 +92,16 @@ export default async function handler(req, res) {
       const precio = Number(process.env.MP_PRECIO_ACCESO || 0);
       if (!precio) throw Error('Falta configurar MP_PRECIO_ACCESO en Vercel (precio en ARS)');
       const base = siteUrl(req);
-      const modo = req.query.modo || 'completo'; // completo | sinvuelta | solonotif | soloback | backauto
+      // OJO: back_urls + notification_url juntos en la misma preferencia rompen
+      // el checkout de MercadoPago (deja el botón "Pagar" deshabilitado). Se
+      // confirmó probando cada combinación por separado. Dejamos solo back_urls
+      // acá; el webhook (notification_url) se configura aparte, a nivel de
+      // aplicación, en el panel de MercadoPago (Notificaciones → Webhooks),
+      // que no sufre este bug porque no viaja dentro del body de la preferencia.
       const prefBody = {
         items: [{ title: 'Acceso a VidaPlus', quantity: 1, unit_price: precio, currency_id: 'ARS' }],
+        back_urls: { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` },
       };
-      if (modo === 'completo') {
-        prefBody.back_urls = { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` };
-        prefBody.notification_url = `${base}/api/mercadopago`;
-      } else if (modo === 'solonotif') {
-        prefBody.notification_url = `${base}/api/mercadopago`;
-      } else if (modo === 'soloback') {
-        prefBody.back_urls = { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` };
-      } else if (modo === 'backauto') {
-        prefBody.back_urls = { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` };
-        prefBody.auto_return = 'approved';
-      }
-      // modo === 'sinvuelta' no agrega nada extra
       const r = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
