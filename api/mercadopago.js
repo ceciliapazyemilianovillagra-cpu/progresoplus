@@ -101,6 +101,7 @@ export default async function handler(req, res) {
       const prefBody = {
         items: [{ title: 'Acceso a VidaPlus', quantity: 1, unit_price: precio, currency_id: 'ARS' }],
         back_urls: { success: `${base}/gracias.html`, failure: `${base}/pago-fallido.html`, pending: `${base}/pago-fallido.html` },
+        auto_return: 'approved',
       };
       const r = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',

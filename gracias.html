@@ -14,24 +14,27 @@ p{color:var(--muted);margin:0 0 18px;font-size:14px;line-height:1.5}
 .fila b{font-size:16px;word-break:break-all}
 .aviso{background:#FFF6E8;border:1px solid #F0DDB0;color:#7a5b12;font-size:12.5px;border-radius:12px;padding:10px 12px;margin-bottom:18px;text-align:left}
 a.btn{display:block;width:100%;border:0;border-radius:14px;padding:15px;background:var(--violet);color:#fff;font-weight:800;font-size:15px;text-decoration:none;box-sizing:border-box}
+a.soporte{display:block;width:100%;border-radius:14px;padding:12px;background:var(--cream);color:var(--ink);font-weight:700;font-size:13px;text-decoration:none;box-sizing:border-box;text-align:center;margin-top:12px}
 .spin{color:var(--muted);font-size:14px}
 .err{color:#a52c28;font-size:13.5px}
 </style></head><body>
 <div class="card" id="card"><p class="spin">Confirmando tu pago…</p></div>
 <script>
+const SUPPORT_WHATSAPP='5490000000000';/* PENDIENTE: reemplazar por el numero real de soporte */
+const SOPORTE_HTML=`<a class="soporte" target="_blank" rel="noopener" href="https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent('Hola, tuve un problema con mi pago/acceso a VidaPlus')}">¿Problemas para entrar? Escribinos por WhatsApp</a>`;
 const params=new URLSearchParams(location.search);
 const paymentId=params.get('payment_id');
 const card=document.getElementById('card');
 function render(html){card.innerHTML=html}
 function esc(s){return String(s??'').replace(/[&<>'"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[x]))}
 async function ir(){
-  if(!paymentId){render('<h1>Falta información</h1><p>No encontramos el pago. Si ya pagaste, escribinos y lo resolvemos a mano.</p>');return}
+  if(!paymentId){render('<h1>Falta información</h1><p>No encontramos el pago. Si ya pagaste, escribinos y lo resolvemos a mano.</p>'+SOPORTE_HTML);return}
   try{
     const r=await fetch('/api/mercadopago?payment_id='+encodeURIComponent(paymentId));
     const j=await r.json();
     if(!j.ok)throw Error(j.error||'No se pudo confirmar el pago');
     if(j.estado!=='approved'){
-      render('<h1>Tu pago está en proceso</h1><p>Todavía no se acreditó. En unos minutos actualizá esta página o escribinos si no cambia.</p>');
+      render('<h1>Tu pago está en proceso</h1><p>Todavía no se acreditó. En unos minutos actualizá esta página o escribinos si no cambia.</p>'+SOPORTE_HTML);
       return;
     }
     if(j.created){
@@ -41,13 +44,13 @@ async function ir(){
         <div class="fila"><small>Contraseña</small><b>${esc(j.password)}</b></div>
       </div>
       <div class="aviso">Guardala en un lugar seguro. Una vez que entres, te recomendamos cambiarla por una que elijas vos.</div>
-      <a class="btn" href="/">Entrar a VidaPlus</a>`);
+      <a class="btn" href="/">Entrar a VidaPlus</a>${SOPORTE_HTML}`);
     }else{
       render(`<h1>¡Ya sos parte de VidaPlus!</h1><p>Detectamos que <b>${esc(j.email)}</b> ya tenía una cuenta creada. Iniciá sesión con tu usuario y clave de siempre.</p>
-      <a class="btn" href="/">Ir a iniciar sesión</a>`);
+      <a class="btn" href="/">Ir a iniciar sesión</a>${SOPORTE_HTML}`);
     }
   }catch(e){
-    render('<h1 class="err">Ups</h1><p>'+e.message+'. Si ya pagaste, escribinos y lo resolvemos a mano.</p>');
+    render('<h1 class="err">Ups</h1><p>'+e.message+'. Si ya pagaste, escribinos y lo resolvemos a mano.</p>'+SOPORTE_HTML);
   }
 }
 ir();

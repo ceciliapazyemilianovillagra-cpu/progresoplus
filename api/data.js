@@ -65,6 +65,30 @@ export default async function handler(req,res){
    const clean={id:u.id,email:u.email,usuario:u.usuario,nombre:u.nombre,rol:u.rol};res.setHeader('Set-Cookie',cookie(token(clean)));return res.status(200).json({ok:true,data:{user:clean}});
   }
   if(p.action==='logout'){res.setHeader('Set-Cookie',clear);return res.status(200).json({ok:true,data:{}})}
+  if(p.action==='solicitarReset'){
+   const email=text(p.email,'Email').toLowerCase();
+   const u=row(await sql`SELECT id::text,nombre FROM usuarios WHERE email=${email}`);
+   if(u){
+    const token=randomBytes(24).toString('hex');
+    const expira=new Date(Date.now()+1000*60*30);
+    await sql`INSERT INTO password_resets(token,usuario_id,expira) VALUES (${token},${u.id},${expira})`;
+    const proto=req.headers['x-forwarded-proto']||'https',host=req.headers['x-forwarded-host']||req.headers.host;
+    const link=`${proto}://${host}/resetear?token=${token}`;
+    if(process.env.APPS_SCRIPT_EMAIL_URL&&process.env.APPS_SCRIPT_EMAIL_SECRET){
+     try{await fetch(process.env.APPS_SCRIPT_EMAIL_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:process.env.APPS_SCRIPT_EMAIL_SECRET,to:email,nombre:u.nombre||'',link})})}catch(_){}
+    }
+   }
+   return res.status(200).json({ok:true,data:{sent:true}});
+  }
+  if(p.action==='confirmarReset'){
+   const token=text(p.token,'Token'),password=text(p.password,'Contraseña');
+   if(password.length<8)throw Error('La contraseña debe tener al menos 8 caracteres');
+   const pr=row(await sql`SELECT usuario_id::text,expira,usado FROM password_resets WHERE token=${token}`);
+   if(!pr||pr.usado||new Date(pr.expira)<new Date())throw Error('El link no es válido o ya venció. Pedí uno nuevo.');
+   await sql`UPDATE usuarios SET password_hash=${hash(password)} WHERE id=${pr.usuario_id}`;
+   await sql`UPDATE password_resets SET usado=true WHERE token=${token}`;
+   return res.status(200).json({ok:true,data:{ok:true}});
+  }
   const user=userFrom(req);if(!user)throw Error('Sesión requerida');
   const account=row(await sql`SELECT id::text,email,usuario,nombre,rol FROM usuarios WHERE id=${user.id}`);if(!account){res.setHeader('Set-Cookie',clear);throw Error('Sesión requerida')}
   if(p.action==='session'){const settings=row(await sql`SELECT recordatorios_activos,recordatorios_premium,canal_recordatorio,webhook_url,whatsapp_phone,zona_horaria,altura_cm::float8 AS altura_cm,condiciones,peso_objetivo_kg::float8 AS peso_objetivo_kg,edad,sexo,nivel_actividad FROM configuracion_usuario WHERE usuario_id=${user.id}`);const nutricion=row(await sql`SELECT household_size,diet_type,allergies,calorie_goal FROM vidaplus_profiles WHERE id=${user.id}`)||null;return res.status(200).json({ok:true,data:{user:account,settings,nutricion}})}
