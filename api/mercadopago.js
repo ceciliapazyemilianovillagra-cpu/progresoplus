@@ -1,5 +1,6 @@
 import postgres from 'postgres';
 import { randomBytes, scryptSync } from 'node:crypto';
+import { emailsHabilitados, enviarEmail, emailBienvenida } from './_email.js';
 
 const hash = p => { const s = randomBytes(16).toString('hex'); return s + ':' + scryptSync(p, s, 64).toString('hex') };
 
@@ -75,6 +76,13 @@ async function ensureAccountForPayment(sql, payment) {
   }
   await sql`INSERT INTO configuracion_usuario(usuario_id) VALUES (${nuevo.id})`;
   await sql`INSERT INTO pagos_mercadopago(payment_id,email,usuario_id,monto,estado,cuenta_creada) VALUES (${paymentId},${email},${nuevo.id},${monto},'approved',true)`;
+
+  if (emailsHabilitados()) {
+    try {
+      const proto = process.env.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL : 'https://progresoplus.vercel.app';
+      await enviarEmail({ to: email, ...emailBienvenida({ email, password, urlApp: proto }) });
+    } catch (_) { /* si falla el mail, igual se muestra en pantalla */ }
+  }
 
   return { estado: 'approved', email, created: true, existed: false, password };
 }

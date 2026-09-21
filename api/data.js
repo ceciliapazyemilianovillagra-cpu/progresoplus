@@ -4,6 +4,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getAiMonitoring } from './ai-events.js';
+import { emailsHabilitados, enviarEmail, emailReseteo } from './_email.js';
 
 const BOOKS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'books');
 
@@ -74,7 +75,9 @@ export default async function handler(req,res){
     await sql`INSERT INTO password_resets(token,usuario_id,expira) VALUES (${token},${u.id},${expira})`;
     const proto=req.headers['x-forwarded-proto']||'https',host=req.headers['x-forwarded-host']||req.headers.host;
     const link=`${proto}://${host}/resetear?token=${token}`;
-    if(process.env.APPS_SCRIPT_EMAIL_URL&&process.env.APPS_SCRIPT_EMAIL_SECRET){
+    if(emailsHabilitados()){
+     try{await enviarEmail({to:email,...emailReseteo({nombre:u.nombre||'',link})})}catch(_){}
+    }else if(process.env.APPS_SCRIPT_EMAIL_URL&&process.env.APPS_SCRIPT_EMAIL_SECRET){
      try{await fetch(process.env.APPS_SCRIPT_EMAIL_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:process.env.APPS_SCRIPT_EMAIL_SECRET,to:email,nombre:u.nombre||'',link})})}catch(_){}
     }
    }
