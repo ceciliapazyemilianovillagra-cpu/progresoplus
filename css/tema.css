@@ -246,3 +246,7 @@ h1{font-size:28px!important;letter-spacing:-.8px!important;font-weight:700!impor
  .view:not(.tiles-view){max-width:1000px;margin:0}
  .hub-view{max-width:1180px;margin:0}
 }
+
+.mod-wrap{position:relative}
+.mod-wrap>.mod-sec-action{position:absolute;right:14px;top:10px;z-index:2;display:flex;gap:6px;align-items:center}
+.mod-wrap>details>summary{padding-right:110px}
