@@ -1,5 +1,6 @@
 import postgres from 'postgres';
 import { createHmac } from 'node:crypto';
+import { avisoPresupuesto } from './_extra.js';
 
 // Punto de entrada para el atajo del iPhone (Siri / Atajos) y cualquier captura rapida.
 // POST /api/captura  { token, texto, tipo?, monto?, categoria?, fecha?, hora? }
@@ -25,7 +26,14 @@ const adivinarCategoria = t => Object.entries(CATEGORIAS).find(([, re]) => re.te
 function interpretar(texto) {
   const t = String(texto || '').trim();
   const m = t.match(/^(gast[oeé]|compr[eé]|pagu[eé]|pag[oó]|ingreso|cobr[eé])\s+\$?\s*([\d.,]+)\s*(?:en|de|por)?\s*(.*)$/i);
-  if (!m) return { tipo: 'tarea', texto: t };
+  if (!m) {
+    let x;
+    if ((x = t.match(/^(?:nota|idea|bandeja)\s*[:,.-]?\s+(.+)$/i))) return { tipo: 'bandeja', texto: x[1].trim() };
+    if ((x = t.match(/^(?:comprar|compra|compr[aá]me)\s+(.+)$/i))) return { tipo: 'tarea', categoria: 'compras', texto: 'Comprar ' + x[1].trim() };
+    if ((x = t.match(/^presupuesto\s*(?:de|para)?\s+(.+)$/i))) return { tipo: 'tarea', categoria: 'presupuesto', texto: 'Sacar presupuesto: ' + x[1].trim() };
+    if ((x = t.match(/^familia\s*[:,.-]?\s+(.+)$/i))) return { tipo: 'tarea', categoria: 'familia', texto: x[1].trim() };
+    return { tipo: 'tarea', texto: t };
+  }
   const monto = Number(m[2].replace(/\./g, '').replace(',', '.'));
   if (!Number.isFinite(monto) || monto <= 0) return { tipo: 'tarea', texto: t };
   const esIngreso = /^(ingreso|cobr)/i.test(m[1]);
@@ -59,16 +67,27 @@ export default async function handler(req, res) {
       const monto = Number(pedido.monto);
       if (!Number.isFinite(monto) || monto <= 0) return res.status(400).json({ ok: false, mensaje: 'Falta el monto' });
       const categoria = String(pedido.categoria || adivinarCategoria(pedido.descripcion || '')).slice(0, 40);
-      await sql`INSERT INTO gastos(usuario_id,fecha,monto,tipo,categoria,descripcion,origen) VALUES (${userId},${dia(body.fecha)},${monto},${pedido.tipo},${categoria},${String(pedido.descripcion || '').slice(0, 200)},'atajo')`;
-      return res.json({ ok: true, mensaje: `${pedido.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} de ${peso(monto)} anotado en ${categoria}` });
+      const fechaG = dia(body.fecha);
+      await sql`INSERT INTO gastos(usuario_id,fecha,monto,tipo,categoria,descripcion,origen) VALUES (${userId},${fechaG},${monto},${pedido.tipo},${categoria},${String(pedido.descripcion || '').slice(0, 200)},'atajo')`;
+      let aviso = '';
+      if (pedido.tipo === 'gasto') {
+        const av = await avisoPresupuesto(sql, userId, categoria, fechaG);
+        if (av) aviso = av.nivel === 'excedido' ? `. Atención: te pasaste del presupuesto de ${categoria}` : `. Ojo: llevás el ${av.pct} por ciento del presupuesto de ${categoria}`;
+      }
+      return res.json({ ok: true, mensaje: `${pedido.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} de ${peso(monto)} anotado en ${categoria}${aviso}` });
     }
 
     const texto = String(pedido.texto || '').trim();
     if (!texto) return res.status(400).json({ ok: false, mensaje: 'No escuché qué anotar' });
+    if (pedido.tipo === 'bandeja') {
+      await sql`INSERT INTO bandeja(usuario_id,texto,origen) VALUES (${userId},${texto.slice(0, 1000)},'atajo')`;
+      return res.json({ ok: true, mensaje: 'Guardado en tu bandeja de entrada' });
+    }
     const fecha = dia(body.fecha);
     const hora = /^\d{1,2}:\d{2}$/.test(String(body.hora || '')) ? String(body.hora).padStart(5, '0') : null;
     const vencimiento = hora ? `${fecha}T${hora}:00-03:00` : null;
-    await sql`INSERT INTO tareas(usuario_id,fecha,texto,vencimiento,alerta) VALUES (${userId},${fecha},${texto.slice(0, 500)},${vencimiento},${!!hora})`;
+    const cat = ['personal', 'familia', 'compras', 'presupuesto', 'trabajo'].includes(pedido.categoria) ? pedido.categoria : 'personal';
+    await sql`INSERT INTO tareas(usuario_id,fecha,texto,vencimiento,alerta,categoria) VALUES (${userId},${fecha},${texto.slice(0, 500)},${vencimiento},${!!hora},${cat})`;
     return res.json({ ok: true, mensaje: hora ? `Recordatorio anotado para las ${hora}` : 'Tarea anotada' });
   } catch (e) {
     return res.status(500).json({ ok: false, mensaje: e.message || 'Error inesperado' });
