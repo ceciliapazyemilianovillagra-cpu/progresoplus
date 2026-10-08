@@ -19,16 +19,16 @@ export async function enviarEmail({ to, subject, html, text }) {
 }
 
 function plantilla({ titulo, cuerpoHtml, boton, pie }) {
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#F6F2E7;font-family:Arial,Helvetica,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F2E7;padding:32px 16px;"><tr><td align="center">
-<table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#FFFFFF;border-radius:20px;overflow:hidden;border:1px solid #E4E4D6;">
-<tr><td style="background:#2F6B4F;padding:28px 32px;text-align:center;">
-<div style="display:inline-block;width:44px;height:44px;background:#FFFFFF;border-radius:12px;line-height:44px;font-weight:800;font-size:16px;color:#2F6B4F;">V+</div>
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#E9F1FB;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E9F1FB;padding:32px 16px;"><tr><td align="center">
+<table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#FFFFFF;border-radius:20px;overflow:hidden;border:1px solid #E8EBF2;">
+<tr><td style="background:#14161C;padding:28px 32px;text-align:center;">
+<div style="display:inline-block;width:44px;height:44px;background:#F8EFCB;border-radius:12px;line-height:44px;font-weight:800;font-size:16px;color:#14161C;">V+</div>
 <div style="color:#FFFFFF;font-weight:800;font-size:20px;margin-top:10px;">VidaPlus</div></td></tr>
-<tr><td style="padding:36px 32px 12px 32px;"><h1 style="margin:0 0 14px 0;font-size:21px;color:#25332B;">${titulo}</h1>${cuerpoHtml}</td></tr>
-${boton ? `<tr><td style="padding:8px 32px 28px 32px;" align="center"><a href="${boton.url}" style="display:inline-block;background:#2F6B4F;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:13px;">${boton.texto}</a></td></tr>` : ''}
-<tr><td style="padding:0 32px 28px 32px;"><div style="background:#F6F2E7;border:1px solid #E4E4D6;border-radius:13px;padding:14px 16px;"><p style="margin:0;font-size:12px;line-height:1.5;color:#6E7D72;">${pie}</p></div></td></tr>
-<tr><td style="padding:20px 32px;background:#F6F2E7;text-align:center;border-top:1px solid #E4E4D6;"><p style="margin:0;font-size:11px;color:#6E7D72;">VidaPlus · Comida saludable, cuerpo saludable y recordatorios</p></td></tr>
+<tr><td style="padding:36px 32px 12px 32px;"><h1 style="margin:0 0 14px 0;font-size:21px;color:#14161C;">${titulo}</h1>${cuerpoHtml}</td></tr>
+${boton ? `<tr><td style="padding:8px 32px 28px 32px;" align="center"><a href="${boton.url}" style="display:inline-block;background:#14161C;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:13px;">${boton.texto}</a></td></tr>` : ''}
+<tr><td style="padding:0 32px 28px 32px;"><div style="background:#E9F1FB;border:1px solid #E8EBF2;border-radius:13px;padding:14px 16px;"><p style="margin:0;font-size:12px;line-height:1.5;color:#8B90A0;">${pie}</p></div></td></tr>
+<tr><td style="padding:20px 32px;background:#E9F1FB;text-align:center;border-top:1px solid #E8EBF2;"><p style="margin:0;font-size:11px;color:#8B90A0;">VidaPlus · Comida saludable, cuerpo saludable y recordatorios</p></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -39,7 +39,7 @@ export function emailReseteo({ nombre, link }) {
     text: `${nombre ? 'Hola ' + nombre : 'Hola'},\n\nPediste recuperar tu contraseña de VidaPlus. Entrá a este link para elegir una nueva (vale 30 minutos):\n\n${link}\n\nSi no fuiste vos, ignorá este mensaje.\n\nVidaPlus`,
     html: plantilla({
       titulo: 'Recuperá tu contraseña',
-      cuerpoHtml: `<p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#25332B;">${saludo}</p><p style="margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#6E7D72;">Pediste recuperar tu contraseña. Tocá el botón para elegir una nueva. El link vale por <b style="color:#25332B;">30 minutos</b>.</p>`,
+      cuerpoHtml: `<p style="margin:0 0 8px 0;font-size:14px;line-height:1.6;color:#14161C;">${saludo}</p><p style="margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#8B90A0;">Pediste recuperar tu contraseña. Tocá el botón para elegir una nueva. El link vale por <b style="color:#14161C;">30 minutos</b>.</p>`,
       boton: { url: link, texto: 'Elegir nueva contraseña' },
       pie: 'Si no fuiste vos quien pidió este cambio, podés ignorar este mensaje: tu contraseña actual sigue funcionando.',
     }),
@@ -52,12 +52,12 @@ export function emailBienvenida({ email, password, urlApp }) {
     text: `¡Bienvenido/a a VidaPlus!\n\nUsuario: ${email}\nContraseña: ${password}\n\nEntrá acá: ${urlApp}\n\nTe recomendamos cambiar la contraseña después de entrar. Si tenés problemas, respondé este mail.`,
     html: plantilla({
       titulo: '¡Tu acceso fue habilitado!',
-      cuerpoHtml: `<p style="margin:0 0 16px 0;font-size:14px;line-height:1.6;color:#6E7D72;">Ya sos parte de VidaPlus. Estos son tus datos para entrar:</p>
-<div style="background:#F6F2E7;border:1px solid #E4E4D6;border-radius:14px;padding:16px 18px;margin-bottom:8px;">
-<div style="font-size:10.5px;font-weight:700;color:#6E7D72;letter-spacing:.05em;text-transform:uppercase;">Usuario</div>
-<div style="font-size:15px;font-weight:700;color:#25332B;margin-bottom:12px;word-break:break-all;">${esc(email)}</div>
-<div style="font-size:10.5px;font-weight:700;color:#6E7D72;letter-spacing:.05em;text-transform:uppercase;">Contraseña</div>
-<div style="font-size:15px;font-weight:700;color:#25332B;">${esc(password)}</div></div>`,
+      cuerpoHtml: `<p style="margin:0 0 16px 0;font-size:14px;line-height:1.6;color:#8B90A0;">Ya sos parte de VidaPlus. Estos son tus datos para entrar:</p>
+<div style="background:#E9F1FB;border:1px solid #E8EBF2;border-radius:14px;padding:16px 18px;margin-bottom:8px;">
+<div style="font-size:10.5px;font-weight:700;color:#8B90A0;letter-spacing:.05em;text-transform:uppercase;">Usuario</div>
+<div style="font-size:15px;font-weight:700;color:#14161C;margin-bottom:12px;word-break:break-all;">${esc(email)}</div>
+<div style="font-size:10.5px;font-weight:700;color:#8B90A0;letter-spacing:.05em;text-transform:uppercase;">Contraseña</div>
+<div style="font-size:15px;font-weight:700;color:#14161C;">${esc(password)}</div></div>`,
       boton: { url: urlApp, texto: 'Entrar a VidaPlus' },
       pie: 'Guardá este mail. Una vez adentro te recomendamos cambiar la contraseña. Si tenés problemas para entrar, respondé este mensaje y te ayudamos.',
     }),
