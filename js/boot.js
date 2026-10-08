@@ -1,0 +1,2 @@
+// VidaPlus - modulo boot
+load();
