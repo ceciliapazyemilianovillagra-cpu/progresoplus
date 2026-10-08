@@ -14,12 +14,12 @@ function persRowHtml(p){const venc=p.proxima_fecha&&p.proxima_fecha<=today();ret
 function persListaHtml(){const l=persFiltradas();return l.length?l.map(persRowHtml).join(''):'<div class="empty">No hay personas con ese filtro. Tocá "+ Persona" para agregar.</div>'}
 
 VIEWS.personas=function(){
-  const head=`<div class="module-head"><button class="link" onclick="go('hub')">‹ Menú principal</button><h1>Personas</h1><p>Tus contactos, qué hablaste y cuál es el próximo paso.</p></div>`;
+  const head=`<div class="module-head"><button class="link" onclick="go('hub')">‹ Inicio</button><h1>Personas</h1><p>Tus contactos, qué hablaste y cuál es el próximo paso.</p></div>`;
   if(PERS===null)return head+'<div class="empty">Cargando…</div>';
   const cuenta=e=>e?PERS.filter(p=>p.estado===e).length:PERS.length;
   const chips=[['','Todos'],...PERS_ESTADOS].map(([k,l])=>`<button class="chip ${PERS_EST===k?'on':''}" onclick="persSet('est','${k}')">${l} <i>${cuenta(k)}</i></button>`).join('');
   const pend=PERS.filter(p=>p.proxima_fecha&&p.proxima_fecha<=today()&&p.estado!=='pausa');
-  return head+`<div class="per-bar"><input id="persQ" placeholder="Buscar por nombre, organización, ciudad…" value="${esc(PERS_Q)}" oninput="persSet('q',this.value)" autocomplete="off"><button class="save" onclick="persForm()">+ Persona</button><button class="cancel" onclick="IMP_TIPO='personas';go('importar')">Importar</button></div><div class="chip-group per-chips">${chips}</div>${pend.length?`<div class="fin-box per-pend"><h2>Para hacer hoy o atrasados (${pend.length})</h2>${pend.slice(0,8).map(persRowHtml).join('')}</div>`:''}<div class="per-table"><div class="per-head"><span>Nombre</span><span>Estado</span><span>Prior.</span><span>Próximo paso</span><span>Último</span></div><div id="persList">${persListaHtml()}</div></div>`;
+  return head+`<div class="per-bar"><input id="persQ" placeholder="Buscar por nombre, organización, ciudad…" value="${esc(PERS_Q)}" oninput="persSet('q',this.value)" autocomplete="off"><button class="save" onclick="persForm()">+ Persona</button></div><div class="chip-group per-chips">${chips}</div>${pend.length?`<div class="fin-box per-pend"><h2>Para hacer hoy o atrasados (${pend.length})</h2>${pend.slice(0,8).map(persRowHtml).join('')}</div>`:''}<div class="per-table"><div class="per-head"><span>Nombre</span><span>Estado</span><span>Prior.</span><span>Próximo paso</span><span>Último</span></div><div id="persList">${persListaHtml()}</div></div>`;
 };
 
 async function persAbrir(id){busy(1);let p;try{p=await api('getPersona',{id})}catch(e){busy(0);return say(e.message)}busy(0);persModal(p)}

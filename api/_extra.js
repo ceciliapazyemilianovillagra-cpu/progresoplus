@@ -46,6 +46,16 @@ export async function avisoPresupuesto(sql, userId, categoria, fecha) {
 
 export async function manejarExtra(action, p, user, sql) {
   switch (action) {
+    // ---------- RESUMEN DEL INICIO
+    case 'resumenInicio': {
+      const hoy = hoyAR(), mes = hoy.slice(0, 7);
+      const g = row(await sql`SELECT coalesce(sum(monto),0)::float AS gasto FROM gastos WHERE usuario_id=${user.id} AND tipo='gasto' AND to_char(fecha,'YYYY-MM')=${mes}`);
+      const k = row(await sql`SELECT coalesce(sum(kcal),0)::int AS kcal FROM comidas_dia WHERE usuario_id=${user.id} AND fecha=${hoy}`);
+      const per = row(await sql`SELECT count(*)::int AS n FROM personas WHERE usuario_id=${user.id} AND estado<>'pausa' AND proxima_fecha<=${hoy}`);
+      const ban = row(await sql`SELECT count(*)::int AS n FROM bandeja WHERE usuario_id=${user.id} AND procesado=false`);
+      return { handled: true, data: { gastoMes: g.gasto, kcalHoy: k.kcal, personasHoy: per.n, bandeja: ban.n, mes } };
+    }
+
     // ---------- PRESUPUESTOS
     case 'listPresupuestos':
       return { handled: true, data: await sql`SELECT categoria,monto::float AS monto FROM presupuestos WHERE usuario_id=${user.id} ORDER BY categoria` };

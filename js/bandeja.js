@@ -24,7 +24,7 @@ async function bandejaProcesar(id,destino){
 function fechaHora(iso){try{return new Date(iso).toLocaleString('es-AR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'America/Argentina/Buenos_Aires'})}catch(_){return ''}}
 
 VIEWS.bandeja=function(){
-  const head=`<div class="module-head"><button class="link" onclick="go('hub')">‹ Menú principal</button><h1>Bandeja de entrada</h1><p>Anotá todo lo que se te ocurra sin pensar dónde va. Después lo ordenás con calma.</p></div>`;
+  const head=`<div class="module-head"><button class="link" onclick="go('hub')">‹ Inicio</button><h1>Bandeja de ideas</h1><p>Para ideas sueltas que todavía no sabés dónde van. Después las pasás a tarea, diario o personas.</p></div>`;
   if(BANDEJA===null)return head+'<div class="empty">Cargando…</div>';
   return head+`<div class="per-bar"><input id="bdQ" placeholder="Una idea, un pendiente, un número de teléfono…" autocomplete="off" onkeydown="if(event.key==='Enter')bandejaAdd()"><button class="save" onclick="bandejaAdd()">Guardar</button></div>${BANDEJA.length?BANDEJA.map(b=>`<div class="fin-box bd-item"><div class="bd-txt">${esc(b.texto)}<small>${fechaHora(b.creado)}${b.origen&&b.origen!=='app'?' · desde '+esc(b.origen):''}</small></div><div class="bd-btns"><button onclick="bandejaProcesar('${b.id}','tarea')">A tarea de hoy</button><button onclick="bandejaProcesar('${b.id}','diario')">Al diario</button><button onclick="bandejaProcesar('${b.id}','persona')">A personas</button><button class="bd-x" onclick="bandejaProcesar('${b.id}','descartar')">Descartar</button></div></div>`).join(''):'<div class="empty">La bandeja está vacía. Todo en orden.</div>'}`;
 };
@@ -45,7 +45,7 @@ function irResultado(tipo,a,b){
   else if(tipo==='bandeja')go('bandeja');
 }
 VIEWS.buscar=function(){
-  const head=`<div class="module-head"><button class="link" onclick="go('hub')">‹ Menú principal</button><h1>Buscar</h1><p>Encuentra cualquier cosa en tareas, gastos, personas, notas y bandeja.</p></div><div class="per-bar"><input id="gq2" value="${esc(BUSQ.q)}" placeholder="Escribí al menos 2 letras…" autocomplete="off" onkeydown="if(event.key==='Enter')buscarGlobal(this.value)"><button class="save" onclick="buscarGlobal($('#gq2').value)">Buscar</button></div>`;
+  const head=`<div class="module-head"><button class="link" onclick="go('hub')">‹ Inicio</button><h1>Buscar</h1><p>Encuentra cualquier cosa en tareas, gastos, personas, notas y bandeja.</p></div><div class="per-bar"><input id="gq2" value="${esc(BUSQ.q)}" placeholder="Escribí al menos 2 letras…" autocomplete="off" onkeydown="if(event.key==='Enter')buscarGlobal(this.value)"><button class="save" onclick="buscarGlobal($('#gq2').value)">Buscar</button></div>`;
   const r=BUSQ.res;
   if(r==='cargando')return head+'<div class="empty">Buscando…</div>';
   if(!r)return head+'<div class="empty">Escribí algo para buscar.</div>';
