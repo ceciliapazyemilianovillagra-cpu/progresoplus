@@ -239,7 +239,7 @@ h1{font-size:28px!important;letter-spacing:-.8px!important;font-weight:700!impor
  .sidebar button:hover{background:#fff!important;color:#0F0F14!important}
  .sidebar button.on{background:#fff!important;color:#0F0F14!important;font-weight:700!important;box-shadow:0 0 0 1px #ECECEE}
  .app{margin:0 0 0 238px!important;height:100dvh!important;border-radius:0!important;padding:0!important;background:#fff!important;display:flex!important;flex-direction:column;overflow:hidden!important;max-width:none!important}
- .app>.top{height:76px;border-bottom:1px solid #ECECEE;padding:0 34px!important;max-width:none!important;margin:0!important;flex:none;display:flex;align-items:center;justify-content:space-between}
+ .app>.top,.top{height:76px;border-bottom:1px solid #ECECEE;padding:0 34px!important;max-width:none!important;margin:0!important;flex:none;display:flex!important;visibility:visible!important;align-items:center;justify-content:space-between}
  .app>.top .brand{display:none}
  .top-date{display:block;font-weight:600;color:#3A3A44;font-size:13px;text-transform:capitalize}
  #main{padding:26px 34px 34px!important;max-width:none!important;margin:0!important;overflow-y:auto;flex:1;width:100%}
