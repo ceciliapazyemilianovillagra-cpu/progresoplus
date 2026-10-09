@@ -316,3 +316,13 @@ h1{font-size:28px!important;letter-spacing:-.8px!important;font-weight:700!impor
 .limpiar button{background:#F5F5F6;border:1px solid #E5E5E7;border-radius:10px;padding:12px 14px;font-weight:600;font-size:13.5px;text-align:left;color:#0F0F14}
 .limpiar .limpiar-todo{background:#FDECEA;border-color:#F5C6C2;color:#A52C28}
 @media(min-width:620px){.limpiar{flex-direction:row;flex-wrap:wrap}}
+
+/* ---- tablero: tarjetas que llevan a cada pantalla ---- */
+a.kpi,a.dash-card{text-decoration:none;color:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
+a.kpi{display:flex;flex-direction:column}
+a.dash-card{display:block}
+a.kpi:hover,a.dash-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px #12121a22}
+a.kpi:focus-visible,a.dash-card:focus-visible{outline:2px solid #8A5A3B;outline-offset:2px}
+.dash-card h2{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dash-go{font-style:normal;color:#8A5A3B;font-size:20px;font-weight:700}
+.dash-more{font-size:12.5px;font-weight:700;color:#8A5A3B;text-decoration:none}

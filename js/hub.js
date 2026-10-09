@@ -27,7 +27,8 @@ function svgLinea(pts,color){
   const d=pts.map((p,i)=>(i?'L':'M')+X(p).toFixed(1)+' '+Y(p).toFixed(1)).join(' ');
   return `<svg viewBox="0 0 ${W} ${H}" class="dash-svg" role="img" aria-label="Gráfico de peso"><defs><linearGradient id="lgp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${d} L${X(last).toFixed(1)} ${H-pb} L${X(pts[0]).toFixed(1)} ${H-pb}Z" fill="url(#lgp)"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(last).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="4.5" fill="${color}" stroke="#fff" stroke-width="2"/><text x="${pl}" y="${H-5}" font-size="10" fill="#8A8A93">${fmt(pts[0].f)}</text><text x="${W-pr}" y="${H-5}" text-anchor="end" font-size="10" fill="#8A8A93">${fmt(last.f)}</text></svg>`;
 }
-function dashCard(titulo,sub,cuerpo){return `<div class="dash-card"><h2>${titulo}</h2><p class="sub">${sub}</p>${cuerpo}</div>`}
+function kpiLink(dest){return `href="#${dest}" onclick="go('${dest}');return false"`}
+function dashCard(titulo,sub,cuerpo,dest){return `<a class="dash-card dash-link" ${kpiLink(dest)}><h2>${titulo}<i class="dash-go">›</i></h2><p class="sub">${sub}</p>${cuerpo}</a>`}
 
 function hub(){
   if(INICIO===null)setTimeout(cargarInicio,0);
@@ -45,13 +46,13 @@ function hub(){
   const habHoy=habPct[6];
 
   // ---- indicadores
-  const kTareas=premium?`<div class="kpi k-brown"><small>Tareas para hoy</small><b>${deHoy.length}</b><span>${atras.length?atras.length+' atrasada'+(atras.length===1?'':'s'):'Nada atrasado'}</span></div>`:'';
+  const kTareas=premium?`<a class="kpi k-brown" ${kpiLink('recordatorios')}><small>Tareas para hoy</small><b>${deHoy.length}</b><span>${atras.length?atras.length+' atrasada'+(atras.length===1?'':'s'):'Nada atrasado'}</span></a>`:'';
   const balMes=I?I.ingresoMes-I.gastoMes:0;
-  const kGasto=`<div class="kpi"><small>Gastado este mes</small><b>${I?money(I.gastoMes):cargando}</b><span>${I?(I.ingresoMes?'Ingresos '+money(I.ingresoMes)+' · balance '+(balMes<0?'-':'')+money(Math.abs(balMes)):'Todavía sin ingresos cargados'):''}</span></div>`;
+  const kGasto=`<a class="kpi" ${kpiLink('finanzas')}><small>Gastado este mes</small><b>${I?money(I.gastoMes):cargando}</b><span>${I?(I.ingresoMes?'Ingresos '+money(I.ingresoMes)+' · balance '+(balMes<0?'-':'')+money(Math.abs(balMes)):'Todavía sin ingresos cargados'):''}</span></a>`;
   let kcalSub='';if(I){if(!bal)kcalSub='Completá tus datos en Cuerpo para comparar';else if(!I.kcalHoy)kcalSub='Todavía no cargaste comidas hoy';else{const d=I.kcalHoy-tdee;kcalSub=d<-100?'Déficit de '+Math.abs(d)+' kcal':d>100?'Superávit de '+d+' kcal':'Mantenimiento'}}
-  const kCal=`<div class="kpi"><small>Calorías de hoy</small><b>${I?I.kcalHoy+(bal?' <i>de '+tdee+'</i>':''):cargando}</b><span>${kcalSub}</span></div>`;
+  const kCal=`<a class="kpi" ${kpiLink('nutricion')}><small>Calorías de hoy</small><b>${I?I.kcalHoy+(bal?' <i>de '+tdee+'</i>':''):cargando}</b><span>${kcalSub}</span></a>`;
   const falta=ultimo&&objetivo?+(ultimo.kg-objetivo).toFixed(1):null;
-  const kPeso=`<div class="kpi"><small>Peso actual</small><b>${ultimo?ultimo.kg+' kg':'Sin datos'}</b><span>${falta==null?'Definí tu objetivo en Cuerpo':falta>0?'Te faltan '+falta+' kg':'¡Objetivo alcanzado!'}</span></div>`;
+  const kPeso=`<a class="kpi" ${kpiLink('fisico')}><small>Peso actual</small><b>${ultimo?ultimo.kg+' kg':'Sin datos'}</b><span>${falta==null?'Definí tu objetivo en Cuerpo':falta>0?'Te faltan '+falta+' kg':'¡Objetivo alcanzado!'}</span></a>`;
 
   // ---- graficos
   let rubros='<div class="dash-vacio">Cargá tus gastos en Finanzas y acá vas a ver en qué se te va la plata.</div>';
@@ -64,16 +65,16 @@ function hub(){
   const pts=pesos.filter(p=>p.fecha>=ymd(new Date(Date.now()-90*864e5))).map(p=>({f:p.fecha,v:Number(p.kg)}));
   const hab7=svgBarras(habPct,dias7.map(diaLetra),{ref:0,aria:'Hábitos cumplidos en la semana'});
 
-  const lista=premium?`<div class="dash-card dash-wide"><h2>Para hacer hoy</h2><p class="sub">Tareas de hoy y las que quedaron atrasadas. Tildá las que ya hiciste.</p>${[...atras,...deHoy].slice(0,8).map(taskItem).join('')||'<div class="dash-vacio">No tenés nada pendiente para hoy.</div>'}${atras.length+deHoy.length>8?'<div class="sub" style="margin-top:8px">Hay más tareas en la Agenda.</div>':''}</div>`:'';
+  const lista=premium?`<div class="dash-card dash-wide"><h2>Para hacer hoy<a class="dash-more" ${kpiLink('recordatorios')}>Ir a la Agenda ›</a></h2><p class="sub">Tareas de hoy y las que quedaron atrasadas. Tildá las que ya hiciste.</p>${[...atras,...deHoy].slice(0,8).map(taskItem).join('')||'<div class="dash-vacio">No tenés nada pendiente para hoy.</div>'}${atras.length+deHoy.length>8?'<div class="sub" style="margin-top:8px">Hay más tareas en la Agenda.</div>':''}</div>`:'';
 
   return `<section class="view on hub-view tiles-view">${cab}
 <div class="dash-kpis">${kTareas}${kGasto}${kCal}${kPeso}</div>
 <div class="dash-charts">
-${dashCard('En qué gastás este mes','Tus gastos por rubro, del que más al que menos.',rubros)}
-${dashCard('Gastos de los últimos 14 días','Cuánto gastaste cada día. La barra marrón es hoy.',gastos14)}
-${dashCard('Calorías de los últimos 7 días','Lo que comiste cada día. La línea marrón es lo que gasta tu cuerpo.',cal7)}
-${dashCard('Tu peso','Cómo viene tu peso en los últimos 3 meses.',svgLinea(pts,MARRON))}
-${dashCard('Hábitos de la semana','Qué porcentaje de tus hábitos cumpliste cada día'+(habHoy?'. Hoy: '+habHoy+'%':'')+'.',hab7)}
+${dashCard('En qué gastás este mes','Tus gastos por rubro, del que más al que menos.',rubros,'finanzas')}
+${dashCard('Gastos de los últimos 14 días','Cuánto gastaste cada día. La barra marrón es hoy.',gastos14,'finanzas')}
+${dashCard('Calorías de los últimos 7 días','Lo que comiste cada día. La línea marrón es lo que gasta tu cuerpo.',cal7,'nutricion')}
+${dashCard('Tu peso','Cómo viene tu peso en los últimos 3 meses.',svgLinea(pts,MARRON),'fisico')}
+${dashCard('Hábitos de la semana','Qué porcentaje de tus hábitos cumpliste cada día'+(habHoy?'. Hoy: '+habHoy+'%':'')+'.',hab7,'fisico')}
 ${lista}
 </div>
 </section>`;
