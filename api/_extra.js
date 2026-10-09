@@ -49,11 +49,16 @@ export async function manejarExtra(action, p, user, sql) {
     // ---------- RESUMEN DEL INICIO
     case 'resumenInicio': {
       const hoy = hoyAR(), mes = hoy.slice(0, 7);
-      const g = row(await sql`SELECT coalesce(sum(monto),0)::float AS gasto FROM gastos WHERE usuario_id=${user.id} AND tipo='gasto' AND to_char(fecha,'YYYY-MM')=${mes}`);
-      const k = row(await sql`SELECT coalesce(sum(kcal),0)::int AS kcal FROM comidas_dia WHERE usuario_id=${user.id} AND fecha=${hoy}`);
-      const per = row(await sql`SELECT count(*)::int AS n FROM personas WHERE usuario_id=${user.id} AND estado<>'pausa' AND proxima_fecha<=${hoy}`);
-      const ban = row(await sql`SELECT count(*)::int AS n FROM bandeja WHERE usuario_id=${user.id} AND procesado=false`);
-      return { handled: true, data: { gastoMes: g.gasto, kcalHoy: k.kcal, personasHoy: per.n, bandeja: ban.n, mes } };
+      const [tot, porCategoria, gastoDias, kcalDias, ban] = await Promise.all([
+        sql`SELECT coalesce(sum(monto) FILTER (WHERE tipo='gasto'),0)::float AS gasto, coalesce(sum(monto) FILTER (WHERE tipo='ingreso'),0)::float AS ingreso FROM gastos WHERE usuario_id=${user.id} AND to_char(fecha,'YYYY-MM')=${mes}`,
+        sql`SELECT categoria, sum(monto)::float AS total FROM gastos WHERE usuario_id=${user.id} AND tipo='gasto' AND to_char(fecha,'YYYY-MM')=${mes} GROUP BY categoria ORDER BY total DESC LIMIT 8`,
+        sql`SELECT fecha::text AS fecha, sum(monto)::float AS total FROM gastos WHERE usuario_id=${user.id} AND tipo='gasto' AND fecha > (${hoy}::date - 14) GROUP BY fecha ORDER BY fecha`,
+        sql`SELECT fecha::text AS fecha, sum(kcal)::int AS kcal FROM comidas_dia WHERE usuario_id=${user.id} AND fecha > (${hoy}::date - 7) GROUP BY fecha ORDER BY fecha`,
+        sql`SELECT count(*)::int AS n FROM bandeja WHERE usuario_id=${user.id} AND procesado=false`,
+      ]);
+      const t = tot[0] || { gasto: 0, ingreso: 0 };
+      const kcalHoy = (kcalDias.find(x => x.fecha === hoy) || { kcal: 0 }).kcal;
+      return { handled: true, data: { mes, gastoMes: t.gasto, ingresoMes: t.ingreso, porCategoria, gastoDias, kcalDias, kcalHoy, bandeja: ban[0].n } };
     }
 
     // ---------- PRESUPUESTOS
@@ -179,14 +184,13 @@ export async function manejarExtra(action, p, user, sql) {
       const q = String(p.q ?? '').trim();
       if (q.length < 2) return { handled: true, data: { tareas: [], gastos: [], personas: [], diario: [], bandeja: [] } };
       const l = '%' + q.replace(/[%_\\]/g, '') + '%';
-      const [tareas, gastos, personas, diario, bandeja] = await Promise.all([
+      const [tareas, gastos, diario, bandeja] = await Promise.all([
         sql`SELECT id::text,fecha::text,texto,hecha,categoria FROM tareas WHERE usuario_id=${user.id} AND (texto ILIKE ${l} OR detalle ILIKE ${l}) ORDER BY fecha DESC LIMIT 10`,
         sql`SELECT id::text,fecha::text,monto::float,tipo,categoria,descripcion FROM gastos WHERE usuario_id=${user.id} AND (descripcion ILIKE ${l} OR categoria ILIKE ${l}) ORDER BY fecha DESC LIMIT 10`,
-        sql`SELECT id::text,nombre,rol,organizacion,estado FROM personas WHERE usuario_id=${user.id} AND (nombre ILIKE ${l} OR organizacion ILIKE ${l} OR rol ILIKE ${l} OR ciudad ILIKE ${l} OR notas ILIKE ${l}) ORDER BY nombre LIMIT 10`,
         sql`SELECT id::text,fecha::text,texto FROM diario WHERE usuario_id=${user.id} AND texto ILIKE ${l} ORDER BY fecha DESC LIMIT 10`,
         sql`SELECT id::text,texto FROM bandeja WHERE usuario_id=${user.id} AND procesado=false AND texto ILIKE ${l} ORDER BY creado DESC LIMIT 10`,
       ]);
-      return { handled: true, data: { tareas, gastos, personas, diario, bandeja } };
+      return { handled: true, data: { tareas, gastos, personas: [], diario, bandeja } };
     }
     default:
       return { handled: false };
