@@ -1,12 +1,15 @@
 // VidaPlus - modulo hub (Inicio): tablero con indicadores y graficos. La navegacion esta en el menu, no aca.
-let INICIO=null,INICIO_CARGANDO=false;
+let INICIO=null,INICIO_CARGANDO=false,INICIO_ULT=null;
 const MARRON='#8A5A3B';
+// Trae los datos del tablero. Si no cambiaron respecto de lo que ya se ve, no vuelve a dibujar (evita el parpadeo).
 async function cargarInicio(){
   if(INICIO_CARGANDO||!AUTH)return;
   INICIO_CARGANDO=true;
-  try{INICIO=await api('resumenInicio')}catch(e){INICIO={mes:'',gastoMes:0,ingresoMes:0,porCategoria:[],gastoDias:[],kcalDias:[],kcalHoy:0,bandeja:0}}
-  INICIO_CARGANDO=false;
-  if(view==='hub')render();
+  let nuevo;
+  try{nuevo=await api('resumenInicio')}catch(e){nuevo=INICIO_ULT||{mes:'',gastoMes:0,ingresoMes:0,porCategoria:[],gastoDias:[],kcalDias:[],kcalHoy:0,bandeja:0}}
+  const igual=JSON.stringify(nuevo)===JSON.stringify(INICIO_ULT);
+  INICIO=nuevo;INICIO_ULT=nuevo;INICIO_CARGANDO=false;
+  if(view==='hub'&&!igual){const m=$('#main');m.classList.add('sin-anim');render();setTimeout(()=>m.classList.remove('sin-anim'),80)}
 }
 
 function ultimosDias(n){const out=[];for(let i=n-1;i>=0;i--){const d=new Date(today()+'T12:00:00');d.setDate(d.getDate()-i);out.push(ymd(d))}return out}
@@ -32,7 +35,7 @@ function dashCard(titulo,sub,cuerpo,dest){return `<a class="dash-card dash-link"
 
 function hub(){
   if(INICIO===null)setTimeout(cargarInicio,0);
-  const nombre=esc((AUTH?.user?.nombre||'').split(' ')[0]||''),hoy=today(),I=INICIO,premium=!!AUTH?.settings?.recordatorios_premium,cargando='…';
+  const nombre=esc((AUTH?.user?.nombre||'').split(' ')[0]||''),hoy=today(),I=INICIO||INICIO_ULT,premium=!!AUTH?.settings?.recordatorios_premium,cargando='…';
   const cab=`<div class="hub-greet"><h1>Hola, ${nombre}</h1><p class="hub-sub">Así venís hoy.</p></div><div class="gsearch"><input id="gq" value="${esc(BUSQ.q)}" placeholder="Buscar en tareas, gastos, notas e ideas…" autocomplete="off" onkeydown="if(event.key==='Enter')buscarGlobal(this.value)"><button onclick="buscarGlobal($('#gq').value)" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button></div>`;
   if(BUSQ.res)return `<section class="view on hub-view tiles-view">${cab}${buscarResultadosHtml()}</section>`;
 

@@ -326,3 +326,5 @@ a.kpi:focus-visible,a.dash-card:focus-visible{outline:2px solid #8A5A3B;outline-
 .dash-card h2{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .dash-go{font-style:normal;color:#8A5A3B;font-size:20px;font-weight:700}
 .dash-more{font-size:12.5px;font-weight:700;color:#8A5A3B;text-decoration:none}
+
+.sin-anim .view,.sin-anim .view *{animation:none!important}
