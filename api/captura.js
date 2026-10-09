@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 import { createHmac } from 'node:crypto';
-import { avisoPresupuesto, parseMonto } from './_extra.js';
+import { asegurarCategoria, parseMonto } from './_extra.js';
 
 // Punto de entrada para los atajos del iPhone. Cada atajo dice EXACTAMENTE que es (tipo), asi que no se adivina nada.
 // POST /api/captura
@@ -13,7 +13,6 @@ const secret = () => process.env.SESSION_SECRET || process.env.DATABASE_URL;
 const hoyAR = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 const dia = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v ?? '')) ? String(v) : hoyAR());
 const peso = n => '$' + Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 });
-const CATEGORIAS = ['Supermercado', 'Comida', 'Transporte', 'Servicios', 'Salud', 'Familia', 'Hogar', 'Otros'];
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -38,16 +37,11 @@ export default async function handler(req, res) {
     if (tipo === 'gasto' || tipo === 'ingreso') {
       const monto = parseMonto(body.monto);
       if (!Number.isFinite(monto) || monto <= 0) return res.status(400).json({ ok: false, mensaje: 'Falta el monto' });
-      const cat = CATEGORIAS.includes(body.categoria) ? body.categoria : 'Otros';
-      const categoria = tipo === 'ingreso' ? 'Ingreso' : cat;
+      const categoria = String(body.categoria || '').trim().slice(0, 40) || 'Sin categoría';
       const fecha = dia(body.fecha);
       await sql`INSERT INTO gastos(usuario_id,fecha,monto,tipo,categoria,descripcion,origen) VALUES (${userId},${fecha},${monto},${tipo},${categoria},${String(body.descripcion || '').trim().slice(0, 200)},'atajo')`;
-      let aviso = '';
-      if (tipo === 'gasto') {
-        const av = await avisoPresupuesto(sql, userId, categoria, fecha);
-        if (av) aviso = av.nivel === 'excedido' ? `. Atención: te pasaste del presupuesto de ${categoria}` : `. Ojo: llevás el ${av.pct} por ciento del presupuesto de ${categoria}`;
-      }
-      return res.json({ ok: true, mensaje: `${tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} de ${peso(monto)} anotado en ${categoria}${aviso}` });
+      await asegurarCategoria(sql, userId, categoria, tipo);
+      return res.json({ ok: true, mensaje: `${tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} de ${peso(monto)} anotado en ${categoria}` });
     }
 
     const texto = String(body.texto || '').trim();

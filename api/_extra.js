@@ -44,6 +44,15 @@ export async function avisoPresupuesto(sql, userId, categoria, fecha) {
   return { categoria, limite: lim.monto, gastado: g.total, pct, nivel: pct >= 100 ? 'excedido' : 'cerca' };
 }
 
+// Crea la categoria del usuario si todavia no existe (separadas por egreso e ingreso)
+export async function asegurarCategoria(sql, userId, nombre, tipo) {
+  nombre = String(nombre ?? '').trim().slice(0, 40);
+  if (!nombre) return null;
+  tipo = tipo === 'ingreso' ? 'ingreso' : 'gasto';
+  await sql`INSERT INTO categorias_gasto(usuario_id,nombre,tipo) VALUES (${userId},${nombre},${tipo}) ON CONFLICT DO NOTHING`;
+  return nombre;
+}
+
 export async function manejarExtra(action, p, user, sql) {
   switch (action) {
     // ---------- RESUMEN DEL INICIO
@@ -60,6 +69,19 @@ export async function manejarExtra(action, p, user, sql) {
       const kcalHoy = (kcalDias.find(x => x.fecha === hoy) || { kcal: 0 }).kcal;
       return { handled: true, data: { mes, gastoMes: t.gasto, ingresoMes: t.ingreso, porCategoria, gastoDias, kcalDias, kcalHoy, bandeja: ban[0].n } };
     }
+
+    // ---------- CATEGORIAS DE FINANZAS (las crea el usuario)
+    case 'listCategorias':
+      return { handled: true, data: await sql`SELECT id::text,nombre,tipo FROM categorias_gasto WHERE usuario_id=${user.id} ORDER BY lower(nombre)` };
+    case 'addCategoria': {
+      const nombre = text(p.nombre, 'El nombre de la categoría').slice(0, 40);
+      const tipo = p.tipo === 'ingreso' ? 'ingreso' : 'gasto';
+      await asegurarCategoria(sql, user.id, nombre, tipo);
+      return { handled: true, data: row(await sql`SELECT id::text,nombre,tipo FROM categorias_gasto WHERE usuario_id=${user.id} AND tipo=${tipo} AND lower(nombre)=lower(${nombre})`) };
+    }
+    case 'deleteCategoria':
+      await sql`DELETE FROM categorias_gasto WHERE id=${p.id} AND usuario_id=${user.id}`;
+      return { handled: true, data: { id: p.id, deleted: true } };
 
     // ---------- PRESUPUESTOS
     case 'listPresupuestos':
@@ -138,9 +160,13 @@ export async function manejarExtra(action, p, user, sql) {
         if (!Number.isFinite(monto) || monto <= 0) return errores.push({ fila: i + 1, motivo: 'Monto inválido' });
         const fecha = f.fecha ? parseFecha(f.fecha) : hoyAR();
         if (!fecha) return errores.push({ fila: i + 1, motivo: 'Fecha inválida' });
-        ok.push({ usuario_id: user.id, fecha, monto, tipo: /ingreso|cobr/i.test(String(f.tipo ?? '')) ? 'ingreso' : 'gasto', categoria: opt(f.categoria, 40) || 'Otros', descripcion: opt(f.descripcion, 200) || '', medio: opt(f.medio, 40) || '', origen: 'importacion' });
+        ok.push({ usuario_id: user.id, fecha, monto, tipo: /ingreso|cobr/i.test(String(f.tipo ?? '')) ? 'ingreso' : 'gasto', categoria: opt(f.categoria, 40) || 'Sin categoría', descripcion: opt(f.descripcion, 200) || '', medio: opt(f.medio, 40) || '', origen: 'importacion' });
       });
-      if (ok.length) await sql`INSERT INTO gastos ${sql(ok, 'usuario_id', 'fecha', 'monto', 'tipo', 'categoria', 'descripcion', 'medio', 'origen')}`;
+      if (ok.length) {
+        await sql`INSERT INTO gastos ${sql(ok, 'usuario_id', 'fecha', 'monto', 'tipo', 'categoria', 'descripcion', 'medio', 'origen')}`;
+        const vistas = new Set();
+        for (const r of ok) { const k = r.tipo + '|' + r.categoria.toLowerCase(); if (!vistas.has(k)) { vistas.add(k); await asegurarCategoria(sql, user.id, r.categoria, r.tipo); } }
+      }
       return { handled: true, data: { insertados: ok.length, errores } };
     }
     case 'importTareas': {

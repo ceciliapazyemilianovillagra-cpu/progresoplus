@@ -303,3 +303,11 @@ h1{font-size:28px!important;letter-spacing:-.8px!important;font-weight:700!impor
 .sidebar button.on{box-shadow:inset 3px 0 0 var(--marron),0 0 0 1px #ECECEE!important}
 .hub-view{max-width:1180px;display:block!important}
 .hub-greet h1{margin-bottom:4px}
+
+/* ---- categorias propias ---- */
+.fin-lab{font-weight:700;font-size:13px;margin:2px 0 8px}
+.chip-new{background:#fff!important;border:1px dashed #8A5A3B!important;color:#8A5A3B!important}
+.chip-g{display:inline-flex;align-items:center;background:#12121A;border-radius:99px;overflow:hidden}
+.chip-g button{background:none!important;color:#fff!important;padding:8px 10px!important;border-radius:0!important}
+.chip-g .chip-x{border-left:1px solid #ffffff40;font-weight:800}
+.fin-edit{display:block;margin:-4px 0 12px}
