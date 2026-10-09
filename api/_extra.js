@@ -83,6 +83,17 @@ export async function manejarExtra(action, p, user, sql) {
       await sql`DELETE FROM categorias_gasto WHERE id=${p.id} AND usuario_id=${user.id}`;
       return { handled: true, data: { id: p.id, deleted: true } };
 
+    // ---------- LIMPIAR LA AGENDA
+    case 'borrarTareas': {
+      const cuales = p.cuales;
+      let r;
+      if (cuales === 'hechas') r = await sql`DELETE FROM tareas WHERE usuario_id=${user.id} AND hecha=true RETURNING 1`;
+      else if (cuales === 'pendientes') r = await sql`DELETE FROM tareas WHERE usuario_id=${user.id} AND hecha=false RETURNING 1`;
+      else if (cuales === 'todas') r = await sql`DELETE FROM tareas WHERE usuario_id=${user.id} RETURNING 1`;
+      else throw Error('Elegí qué tareas borrar');
+      return { handled: true, data: { borradas: r.length } };
+    }
+
     // ---------- PRESUPUESTOS
     case 'listPresupuestos':
       return { handled: true, data: await sql`SELECT categoria,monto::float AS monto FROM presupuestos WHERE usuario_id=${user.id} ORDER BY categoria` };

@@ -2,6 +2,16 @@
 let REC_CAT='todas',REC_TODAS=false;
 function recCat(c){REC_CAT=c;render()}
 function recTodas(){REC_TODAS=!REC_TODAS;render()}
+async function borrarTareasUI(cuales){
+  const hechas=DB.tareas.filter(x=>x.hecha).length,pend=DB.tareas.length-hechas;
+  const n=cuales==='hechas'?hechas:cuales==='pendientes'?pend:DB.tareas.length;
+  const que={hechas:'hechas',pendientes:'pendientes (sin hacer)',todas:'(hechas y pendientes)'}[cuales];
+  if(!n)return say('No hay tareas para borrar en esa opción');
+  if(!confirm('Vas a borrar '+n+' tarea'+(n===1?'':'s')+' '+que+'. No se puede deshacer. ¿Seguro?'))return;
+  busy(1,'Borrando…');
+  try{const r=await api('borrarTareas',{cuales});DB=await api('getAll');INICIO=null;say('Se borraron '+r.borradas+' tarea'+(r.borradas===1?'':'s'))}
+  catch(err){say(err.message)}finally{busy(0);render()}
+}
 
 VIEWS.recordatorios=function(kind){
   const s=AUTH?.settings||{};
@@ -18,5 +28,6 @@ ${waUsageHtml()}
 <div class="chip-group rec-chips">${chips}</div>
 <div class="fin-box"><h2>Atrasadas y próximas 2 semanas (${visibles.length})${tot?` <small class="sub">· ${money(tot)} estimado</small>`:''}</h2>${visibles.map(taskItem).join('')||'<div class="empty">No hay tareas pendientes en esta categoría.</div>'}${ocultas>0||REC_TODAS&&pend.length?`<button class="link" style="margin-top:10px" onclick="recTodas()">${REC_TODAS?'Mostrar solo lo atrasado y las próximas 2 semanas':'Ver las '+ocultas+' tareas siguientes'}</button>`:''}</div>
 ${hechas.length?`<details class="card done-list"><summary>Hechas (${hechas.length})</summary>${hechas.map(taskItem).join('')}</details>`:''}
+<details class="mod-sec"><summary><h2>Limpiar la agenda</h2></summary><div class="mod-sec-body"><p class="sub" style="margin-bottom:10px">Borrá tareas de a muchas. Antes de borrar te muestra cuántas son y te pide confirmar.</p><div class="limpiar"><button onclick="borrarTareasUI('hechas')">Borrar tareas hechas (${DB.tareas.filter(x=>x.hecha).length})</button><button onclick="borrarTareasUI('pendientes')">Borrar tareas pendientes (${DB.tareas.filter(x=>!x.hecha).length})</button><button class="limpiar-todo" onclick="borrarTareasUI('todas')">Borrar todas (${DB.tareas.length})</button></div></div></details>
 <details class="mod-sec"><summary><h2>Avisos por WhatsApp</h2></summary><div class="mod-sec-body"><form onsubmit="saveSettings(event)"><input type="hidden" name="canal_recordatorio" value="whatsapp"><input type="hidden" name="webhook_url" value="${esc(s.webhook_url||'')}"><label class="form-field">Tu número de WhatsApp (con código de país, solo números)<input name="whatsapp_phone" inputmode="numeric" placeholder="5493811234567" value="${esc(s.whatsapp_phone||'')}"></label><label class="inline-check"><input name="recordatorios_activos" type="checkbox" ${s.recordatorios_activos?'checked':''}>Quiero recibir los avisos</label><button class="save" style="width:100%;margin-top:14px;border-radius:10px;padding:13px;font-weight:800">Guardar</button>${AUTH?.user?.rol==='admin'?`<button type="button" class="link" style="margin-top:10px;width:100%;text-align:center" onclick="testWhatsapp()">Enviar WhatsApp de prueba</button>`:''}</form></div></details>`;
 };
