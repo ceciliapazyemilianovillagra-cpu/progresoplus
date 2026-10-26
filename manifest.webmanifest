@@ -4,8 +4,8 @@
   "description": "Tu progreso, a tu ritmo.",
   "start_url": "/?source=homescreen",
   "display": "standalone",
-  "background_color": "#E9F1FB",
-  "theme_color": "#14161C",
+  "background_color": "#faf6ee",
+  "theme_color": "#193b2a",
   "icons": [
     {
       "src": "/app-icon-512.png",

@@ -1,6 +1,6 @@
 // VidaPlus - modulo hub (Inicio): tablero con indicadores y graficos. La navegacion esta en el menu, no aca.
 let INICIO=null,INICIO_CARGANDO=false,INICIO_ULT=null;
-const MARRON='#8A5A3B';
+const MARRON='#e67339';
 // Trae los datos del tablero. Si no cambiaron respecto de lo que ya se ve, no vuelve a dibujar (evita el parpadeo).
 async function cargarInicio(){
   if(INICIO_CARGANDO||!AUTH)return;
@@ -18,7 +18,7 @@ function diaLetra(ds){return ['D','L','M','X','J','V','S'][new Date(ds+'T12:00:0
 // grafico de barras. refLine = linea punteada marron (ej: lo que gastas por dia)
 function svgBarras(vals,labels,opt){
   opt=opt||{};const W=320,H=132,pad=14,base=H-20,max=Math.max(1,...vals,opt.ref||0),n=vals.length,bw=(W-pad*2)/n;let g='';
-  vals.forEach((v,i)=>{const h=Math.round(v/max*(base-14)),w=bw*.64,x=pad+i*bw+bw*.18,ult=i===n-1;g+=`<rect x="${x.toFixed(1)}" y="${base-h}" width="${w.toFixed(1)}" height="${Math.max(h,v>0?2:0)}" rx="4" fill="${ult?MARRON:'#12121A'}"/><text x="${(x+w/2).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="10" fill="#8A8A93">${labels[i]}</text>`});
+  vals.forEach((v,i)=>{const h=Math.round(v/max*(base-14)),w=bw*.64,x=pad+i*bw+bw*.18,ult=i===n-1;g+=`<rect x="${x.toFixed(1)}" y="${base-h}" width="${w.toFixed(1)}" height="${Math.max(h,v>0?2:0)}" rx="4" fill="${ult?MARRON:'#e3d9c6'}"/><text x="${(x+w/2).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="10" fill="#8A8A93">${labels[i]}</text>`});
   if(opt.ref){const y=base-Math.round(opt.ref/max*(base-14));g+=`<line x1="4" x2="${W-4}" y1="${y}" y2="${y}" stroke="${MARRON}" stroke-width="1.5" stroke-dasharray="4 4"/>`}
   return `<svg viewBox="0 0 ${W} ${H}" class="dash-svg" role="img" aria-label="${opt.aria||'Gráfico de barras'}">${g}</svg>`;
 }
