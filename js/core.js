@@ -5,7 +5,7 @@ function module(kind){const f=VIEWS[kind];return f?f(kind):viewDiario()}
 function viewDiario(){let arr=DB.diario;return `<div class="module-head"><h1>Diario</h1><p>Guardá una nota de tu día.</p></div><div class="section"><h2>Notas</h2><button class="link" onclick="openForm('diario')">Agregar nota</button></div><div class="card">${arr.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(x=>item(x,'diario',fmt(x.fecha),esc(x.texto))).join('')||'<div class="empty">Escribí cómo estuvo tu día.</div>'}</div>`;}
 const API_URL='/api/data';
 const LOGO_URL='/app-icon.svg';
-document.head.insertAdjacentHTML('beforeend','<link rel="icon" href="/app-icon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">');
+
 let DB={tareas:[],pesos:[],entrenamientos:[],habitos:[],habitoLogs:[],diario:[],comidas:[]},AUTH=null,view='hub',verArchivados=false,calMonth=new Date(),calSel=null,USERS=[],AI_MONITOR=null;
 const $=s=>document.querySelector(s),today=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Argentina/Buenos_Aires'}),esc=s=>String(s??'').replace(/[&<>'"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[x])),fmt=d=>new Date(d+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'});
 document.querySelector('.brand').innerHTML='<img src="'+LOGO_URL+'" alt="Logo VidaPlus">VidaPlus';
